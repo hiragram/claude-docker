@@ -30,9 +30,9 @@ set -e
 
 # ホスト側パスへのシンボリックリンクを作成
 # installed_plugins.json等がホストの絶対パスを参照しているため
-if [ -n "$HOST_CLAUDE_HOME" ] && [ "$HOST_CLAUDE_HOME" != "/root/.claude" ]; then
+if [ -n "$HOST_CLAUDE_HOME" ] && [ "$HOST_CLAUDE_HOME" != "/home/claude/.claude" ]; then
   mkdir -p "$(dirname "$HOST_CLAUDE_HOME")"
-  ln -sfn /root/.claude "$HOST_CLAUDE_HOME"
+  ln -sfn /home/claude/.claude "$HOST_CLAUDE_HOME"
 fi
 
 exec "$@"
@@ -45,14 +45,23 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends git curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
+RUN useradd -m -s /bin/bash claude
+
+# claudeユーザーとしてインストール
+USER claude
 SHELL ["/bin/bash", "-c"]
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
-ENV PATH="/root/.local/bin:${PATH}"
+ENV PATH="/home/claude/.local/bin:${PATH}"
 
+# entrypointの準備（rootに戻る）
+USER root
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+# シンボリックリンク作成先のベースディレクトリをclaude所有にする
+RUN mkdir -p /Users && chown claude:claude /Users
 
+USER claude
 WORKDIR /workspace
 
 ENTRYPOINT ["/entrypoint.sh"]
@@ -95,8 +104,8 @@ fi
 # --- Claude起動（未認証ならclaude自身がloginを促す） ---
 exec docker run -it --rm \
   -e "HOST_CLAUDE_HOME=$CLAUDE_HOME" \
-  -v "$CONTAINER_CLAUDE_HOME:/root/.claude" \
-  -v "$CONTAINER_CLAUDE_JSON:/root/.claude.json" \
+  -v "$CONTAINER_CLAUDE_HOME:/home/claude/.claude" \
+  -v "$CONTAINER_CLAUDE_JSON:/home/claude/.claude.json" \
   -v "$(pwd):/workspace" \
   "$IMAGE_NAME" \
   claude "$@"
