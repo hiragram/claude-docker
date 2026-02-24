@@ -2,8 +2,9 @@
 set -euo pipefail
 
 IMAGE_NAME="claude-code-docker"
-VOLUME_NAME="claude-code-credentials"
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
+CONTAINER_CLAUDE_HOME="$HOME/.claude-docker"
+CONTAINER_CLAUDE_JSON="$HOME/.claude-docker.json"
 
 # --- Dockerが使えるかチェック ---
 if ! command -v docker &> /dev/null; then
@@ -23,23 +24,6 @@ build_image() {
   tmpdir=$(mktemp -d)
   trap "rm -rf '$tmpdir'" EXIT
 
-  # entrypoint.sh を書き出し
-  cat > "$tmpdir/entrypoint.sh" << 'ENTRYPOINT_EOF'
-#!/bin/bash
-set -e
-
-# .claudeディレクトリを作成（read-onlyマウントされたファイルがある場合は既に存在する）
-mkdir -p /root/.claude
-
-# 認証情報のシンボリックリンクを作成
-if [ -f /root/.claude-auth/.credentials.json ]; then
-  ln -sf /root/.claude-auth/.credentials.json /root/.claude/.credentials.json
-fi
-
-exec "$@"
-ENTRYPOINT_EOF
-
-  # Dockerfile を書き出し
   cat > "$tmpdir/Dockerfile" << 'DOCKERFILE_EOF'
 FROM debian:bookworm-slim
 
@@ -52,12 +36,8 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 
 ENV PATH="/root/.local/bin:${PATH}"
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
 WORKDIR /workspace
 
-ENTRYPOINT ["/entrypoint.sh"]
 CMD ["claude"]
 DOCKERFILE_EOF
 
@@ -72,51 +52,32 @@ if ! docker image inspect "$IMAGE_NAME" > /dev/null 2>&1; then
   build_image
 fi
 
-# --- volume作成 ---
-docker volume create "$VOLUME_NAME" > /dev/null 2>&1 || true
+# --- コンテナ用 ~/.claude-docker/ を準備 ---
+mkdir -p "$CONTAINER_CLAUDE_HOME"
 
-# --- マウントオプション組み立て ---
-MOUNT_OPTS=()
+# ホストの設定ファイルを同期（毎回最新を反映）
+for f in settings.json CLAUDE.md; do
+  if [ -f "$CLAUDE_HOME/$f" ]; then
+    cp "$CLAUDE_HOME/$f" "$CONTAINER_CLAUDE_HOME/$f"
+  fi
+done
 
-if [ -f "$CLAUDE_HOME/settings.json" ]; then
-  MOUNT_OPTS+=(-v "$CLAUDE_HOME/settings.json:/root/.claude/settings.json:ro")
+for d in hooks plugins commands agents; do
+  if [ -d "$CLAUDE_HOME/$d" ]; then
+    rm -rf "$CONTAINER_CLAUDE_HOME/$d"
+    cp -a "$CLAUDE_HOME/$d" "$CONTAINER_CLAUDE_HOME/$d"
+  fi
+done
+
+# --- ~/.claude.json（オンボーディング状態）がなければ作成 ---
+if [ ! -s "$CONTAINER_CLAUDE_JSON" ]; then
+  echo '{}' > "$CONTAINER_CLAUDE_JSON"
 fi
 
-if [ -f "$CLAUDE_HOME/CLAUDE.md" ]; then
-  MOUNT_OPTS+=(-v "$CLAUDE_HOME/CLAUDE.md:/root/.claude/CLAUDE.md:ro")
-fi
-
-if [ -d "$CLAUDE_HOME/hooks" ]; then
-  MOUNT_OPTS+=(-v "$CLAUDE_HOME/hooks:/root/.claude/hooks:ro")
-fi
-
-if [ -d "$CLAUDE_HOME/plugins" ]; then
-  MOUNT_OPTS+=(-v "$CLAUDE_HOME/plugins:/root/.claude/plugins:ro")
-fi
-
-# --- 認証チェック ---
-has_credentials=false
-if docker run --rm -v "$VOLUME_NAME:/root/.claude-auth" "$IMAGE_NAME" test -f /root/.claude-auth/.credentials.json 2>/dev/null; then
-  has_credentials=true
-fi
-
-if [ "$has_credentials" = false ]; then
-  echo "No credentials found. Starting authentication..."
-  echo "Please complete the login in your browser."
-  echo ""
-  docker run -it --rm \
-    -v "$VOLUME_NAME:/root/.claude-auth" \
-    "${MOUNT_OPTS[@]+"${MOUNT_OPTS[@]}"}" \
-    "$IMAGE_NAME" \
-    bash -c 'claude login && cp /root/.claude/.credentials.json /root/.claude-auth/.credentials.json 2>/dev/null || true'
-  echo ""
-  echo "Authentication complete."
-fi
-
-# --- Claude起動 ---
+# --- Claude起動（未認証ならclaude自身がloginを促す） ---
 exec docker run -it --rm \
-  -v "$VOLUME_NAME:/root/.claude-auth" \
+  -v "$CONTAINER_CLAUDE_HOME:/root/.claude" \
+  -v "$CONTAINER_CLAUDE_JSON:/root/.claude.json" \
   -v "$(pwd):/workspace" \
-  "${MOUNT_OPTS[@]+"${MOUNT_OPTS[@]}"}" \
   "$IMAGE_NAME" \
   claude "$@"
