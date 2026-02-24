@@ -2,6 +2,7 @@
 set -euo pipefail
 
 IMAGE_NAME="claude-code-docker"
+VOLUME_NAME="claude-code-local"
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
 CONTAINER_CLAUDE_HOME="$HOME/.claude-docker"
 CONTAINER_CLAUDE_JSON="$HOME/.claude-docker.json"
@@ -28,14 +29,28 @@ build_image() {
 #!/bin/bash
 set -e
 
-# ホスト側パスへのシンボリックリンクを作成
+# ホスト側パスへのシンボリックリンクを作成（root権限で実行）
 # installed_plugins.json等がホストの絶対パスを参照しているため
 if [ -n "$HOST_CLAUDE_HOME" ] && [ "$HOST_CLAUDE_HOME" != "/home/claude/.claude" ]; then
   mkdir -p "$(dirname "$HOST_CLAUDE_HOME")"
   ln -sfn /home/claude/.claude "$HOST_CLAUDE_HOME"
 fi
 
-exec "$@"
+# .local volumeの権限をclaudeユーザーに
+chown -R claude:claude /home/claude/.local
+
+# Claude Codeが未インストールならインストール（claudeユーザーで）
+if [ ! -x /home/claude/.local/bin/claude ]; then
+  echo "Installing Claude Code..."
+  su -s /bin/bash claude -c 'curl -fsSL https://claude.ai/install.sh | bash'
+fi
+
+# workspaceの権限をclaudeユーザーに
+chown claude:claude /workspace 2>/dev/null || true
+
+# claudeユーザーでコマンドを実行
+export HOME=/home/claude
+exec setpriv --reuid=$(id -u claude) --regid=$(id -g claude) --init-groups env HOME=/home/claude "$@"
 ENTRYPOINT_EOF
 
   cat > "$tmpdir/Dockerfile" << 'DOCKERFILE_EOF'
@@ -47,21 +62,13 @@ RUN apt-get update && \
 
 RUN useradd -m -s /bin/bash claude
 
-# claudeユーザーとしてインストール
-USER claude
-SHELL ["/bin/bash", "-c"]
-RUN curl -fsSL https://claude.ai/install.sh | bash
-
 ENV PATH="/home/claude/.local/bin:${PATH}"
 
-# entrypointの準備（rootに戻る）
-USER root
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 # シンボリックリンク作成先のベースディレクトリをclaude所有にする
 RUN mkdir -p /Users && chown claude:claude /Users
 
-USER claude
 WORKDIR /workspace
 
 ENTRYPOINT ["/entrypoint.sh"]
@@ -78,6 +85,9 @@ DOCKERFILE_EOF
 if ! docker image inspect "$IMAGE_NAME" > /dev/null 2>&1; then
   build_image
 fi
+
+# --- Claude Code本体用のvolume作成 ---
+docker volume create "$VOLUME_NAME" > /dev/null 2>&1 || true
 
 # --- コンテナ用 ~/.claude-docker/ を準備 ---
 mkdir -p "$CONTAINER_CLAUDE_HOME"
@@ -104,6 +114,7 @@ fi
 # --- Claude起動（未認証ならclaude自身がloginを促す） ---
 exec docker run -it --rm \
   -e "HOST_CLAUDE_HOME=$CLAUDE_HOME" \
+  -v "$VOLUME_NAME:/home/claude/.local" \
   -v "$CONTAINER_CLAUDE_HOME:/home/claude/.claude" \
   -v "$CONTAINER_CLAUDE_JSON:/home/claude/.claude.json" \
   -v "$(pwd):/workspace" \
