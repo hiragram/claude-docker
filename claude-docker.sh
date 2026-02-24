@@ -24,6 +24,20 @@ build_image() {
   tmpdir=$(mktemp -d)
   trap "rm -rf '$tmpdir'" EXIT
 
+  cat > "$tmpdir/entrypoint.sh" << 'ENTRYPOINT_EOF'
+#!/bin/bash
+set -e
+
+# ホスト側パスへのシンボリックリンクを作成
+# installed_plugins.json等がホストの絶対パスを参照しているため
+if [ -n "$HOST_CLAUDE_HOME" ] && [ "$HOST_CLAUDE_HOME" != "/root/.claude" ]; then
+  mkdir -p "$(dirname "$HOST_CLAUDE_HOME")"
+  ln -sfn /root/.claude "$HOST_CLAUDE_HOME"
+fi
+
+exec "$@"
+ENTRYPOINT_EOF
+
   cat > "$tmpdir/Dockerfile" << 'DOCKERFILE_EOF'
 FROM debian:bookworm-slim
 
@@ -36,8 +50,12 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 
 ENV PATH="/root/.local/bin:${PATH}"
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 WORKDIR /workspace
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["claude"]
 DOCKERFILE_EOF
 
@@ -76,6 +94,7 @@ fi
 
 # --- Claude起動（未認証ならclaude自身がloginを促す） ---
 exec docker run -it --rm \
+  -e "HOST_CLAUDE_HOME=$CLAUDE_HOME" \
   -v "$CONTAINER_CLAUDE_HOME:/root/.claude" \
   -v "$CONTAINER_CLAUDE_JSON:/root/.claude.json" \
   -v "$(pwd):/workspace" \
