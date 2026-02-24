@@ -78,7 +78,7 @@ ENTRYPOINT_EOF
 FROM debian:bookworm-slim
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git curl ca-certificates wget && \
+    apt-get install -y --no-install-recommends git curl ca-certificates wget openssh-client && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p -m 755 /etc/apt/keyrings && \
