@@ -6,18 +6,6 @@ VOLUME_NAME="claude-code-local"
 CLAUDE_HOME="${CLAUDE_HOME:-$HOME/.claude}"
 CONTAINER_CLAUDE_HOME="$HOME/.claude-docker"
 CONTAINER_CLAUDE_JSON="$HOME/.claude-docker.json"
-REBUILD=false
-
-# --- --rebuild オプションの処理 ---
-CLAUDE_ARGS=()
-for arg in "$@"; do
-  if [ "$arg" = "--rebuild" ]; then
-    REBUILD=true
-  else
-    CLAUDE_ARGS+=("$arg")
-  fi
-done
-set -- "${CLAUDE_ARGS[@]+"${CLAUDE_ARGS[@]}"}"
 
 # --- Dockerが使えるかチェック ---
 if ! command -v docker &> /dev/null; then
@@ -130,13 +118,8 @@ DOCKERFILE_EOF
   echo "Docker image '$IMAGE_NAME' built successfully."
 }
 
-# --- イメージ存在チェック ---
-if [ "$REBUILD" = true ]; then
-  docker rmi "$IMAGE_NAME" 2>/dev/null || true
-  build_image
-elif ! docker image inspect "$IMAGE_NAME" > /dev/null 2>&1; then
-  build_image
-fi
+# --- Dockerイメージのビルド（キャッシュが効くため毎回実行） ---
+build_image
 
 # --- Claude Code本体用のvolume作成 ---
 docker volume create "$VOLUME_NAME" > /dev/null 2>&1 || true
