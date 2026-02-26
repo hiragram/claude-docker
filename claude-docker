@@ -159,6 +159,27 @@ if [ -d "$HOME/.ssh" ]; then
   HOST_MOUNTS+=(-v "$HOME/.ssh:/home/claude/.ssh-host:ro")
 fi
 
+# --- git worktree の場合、元リポジトリの .git ディレクトリもマウント ---
+# worktree の .git はファイル（ディレクトリではない）で、中身は
+#   gitdir: /path/to/original-repo/.git/worktrees/<name>
+# コンテナ内からこのパスが見えないと git 操作ができないため、
+# 元リポジトリの .git ディレクトリをそのままマウントする
+if [ -f "$(pwd)/.git" ]; then
+  WORKTREE_GITDIR=$(sed -n 's/^gitdir: //p' "$(pwd)/.git")
+  if [ -n "$WORKTREE_GITDIR" ]; then
+    # .git/worktrees/<name> → .git を得る（2階層上）
+    MAIN_GIT_DIR=$(cd "$WORKTREE_GITDIR/../.." && pwd)
+    # ワークスペース配下であれば既にマウントされているので追加不要
+    case "$MAIN_GIT_DIR" in
+      "$(pwd)"*)
+        ;;
+      *)
+        HOST_MOUNTS+=(-v "$MAIN_GIT_DIR:$MAIN_GIT_DIR")
+        ;;
+    esac
+  fi
+fi
+
 # --- Claude起動（未認証ならclaude自身がloginを促す） ---
 HOST_WORKSPACE="$(pwd)"
 exec docker run -it --rm \
