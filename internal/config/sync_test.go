@@ -11,8 +11,12 @@ func TestSyncSettings_CopiesFiles(t *testing.T) {
 	containerHome := t.TempDir()
 
 	// Create source files
-	os.WriteFile(filepath.Join(claudeHome, "settings.json"), []byte(`{"key":"value"}`), 0644)
-	os.WriteFile(filepath.Join(claudeHome, "CLAUDE.md"), []byte("# Instructions"), 0644)
+	if err := os.WriteFile(filepath.Join(claudeHome, "settings.json"), []byte(`{"key":"value"}`), 0644); err != nil {
+		t.Fatalf("writing settings.json: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(claudeHome, "CLAUDE.md"), []byte("# Instructions"), 0644); err != nil {
+		t.Fatalf("writing CLAUDE.md: %v", err)
+	}
 
 	syncer := NewSyncer()
 	if err := syncer.SyncSettings(claudeHome, containerHome); err != nil {
@@ -59,8 +63,12 @@ func TestSyncSettings_CopiesDirectories(t *testing.T) {
 
 	// Create source directory with files
 	hooksDir := filepath.Join(claudeHome, "hooks")
-	os.MkdirAll(hooksDir, 0755)
-	os.WriteFile(filepath.Join(hooksDir, "pre-commit.sh"), []byte("#!/bin/bash\necho hi"), 0755)
+	if err := os.MkdirAll(hooksDir, 0755); err != nil {
+		t.Fatalf("creating hooks dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(hooksDir, "pre-commit.sh"), []byte("#!/bin/bash\necho hi"), 0755); err != nil {
+		t.Fatalf("writing pre-commit.sh: %v", err)
+	}
 
 	syncer := NewSyncer()
 	if err := syncer.SyncSettings(claudeHome, containerHome); err != nil {
@@ -83,13 +91,21 @@ func TestSyncSettings_ReplacesExistingDirectories(t *testing.T) {
 
 	// Create old content in container
 	oldHooksDir := filepath.Join(containerHome, "hooks")
-	os.MkdirAll(oldHooksDir, 0755)
-	os.WriteFile(filepath.Join(oldHooksDir, "old-hook.sh"), []byte("old"), 0644)
+	if err := os.MkdirAll(oldHooksDir, 0755); err != nil {
+		t.Fatalf("creating old hooks dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(oldHooksDir, "old-hook.sh"), []byte("old"), 0644); err != nil {
+		t.Fatalf("writing old-hook.sh: %v", err)
+	}
 
 	// Create new content in source
 	newHooksDir := filepath.Join(claudeHome, "hooks")
-	os.MkdirAll(newHooksDir, 0755)
-	os.WriteFile(filepath.Join(newHooksDir, "new-hook.sh"), []byte("new"), 0644)
+	if err := os.MkdirAll(newHooksDir, 0755); err != nil {
+		t.Fatalf("creating new hooks dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(newHooksDir, "new-hook.sh"), []byte("new"), 0644); err != nil {
+		t.Fatalf("writing new-hook.sh: %v", err)
+	}
 
 	syncer := NewSyncer()
 	if err := syncer.SyncSettings(claudeHome, containerHome); err != nil {
@@ -152,8 +168,12 @@ func TestSyncSettings_NestedDirectories(t *testing.T) {
 
 	// Create nested directory structure
 	nestedDir := filepath.Join(claudeHome, "plugins", "subdir")
-	os.MkdirAll(nestedDir, 0755)
-	os.WriteFile(filepath.Join(nestedDir, "plugin.json"), []byte(`{}`), 0644)
+	if err := os.MkdirAll(nestedDir, 0755); err != nil {
+		t.Fatalf("creating nested dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(nestedDir, "plugin.json"), []byte(`{}`), 0644); err != nil {
+		t.Fatalf("writing plugin.json: %v", err)
+	}
 
 	syncer := NewSyncer()
 	if err := syncer.SyncSettings(claudeHome, containerHome); err != nil {

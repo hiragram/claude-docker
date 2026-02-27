@@ -29,7 +29,9 @@ func TestEnsureOnboardingState_CreatesWhenEmpty(t *testing.T) {
 	path := filepath.Join(dir, ".claude-docker.json")
 
 	// Create empty file
-	os.WriteFile(path, []byte(""), 0644)
+	if err := os.WriteFile(path, []byte(""), 0644); err != nil {
+		t.Fatalf("writing empty file: %v", err)
+	}
 
 	syncer := NewSyncer()
 	if err := syncer.EnsureOnboardingState(path); err != nil {
@@ -50,7 +52,9 @@ func TestEnsureOnboardingState_PreservesExisting(t *testing.T) {
 	path := filepath.Join(dir, ".claude-docker.json")
 
 	existing := `{"hasCompletedOnboarding":true}`
-	os.WriteFile(path, []byte(existing), 0644)
+	if err := os.WriteFile(path, []byte(existing), 0644); err != nil {
+		t.Fatalf("writing existing file: %v", err)
+	}
 
 	syncer := NewSyncer()
 	if err := syncer.EnsureOnboardingState(path); err != nil {

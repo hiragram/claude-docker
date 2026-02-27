@@ -277,7 +277,9 @@ func TestExecute_EnvVars(t *testing.T) {
 		WorkDir:      "/home/testuser/project",
 	}
 
-	runner.Execute(context.Background(), nil)
+	if err := runner.Execute(context.Background(), nil); err != nil {
+		t.Fatalf("Execute() error: %v", err)
+	}
 
 	if len(dc.runCalls) != 1 {
 		t.Fatalf("expected 1 run call, got %d", len(dc.runCalls))
