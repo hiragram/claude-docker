@@ -317,6 +317,29 @@ func TestHasVersionFlag(t *testing.T) {
 	}
 }
 
+func TestHasWorktreeFlag(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want bool
+	}{
+		{"--worktree flag", []string{"--worktree"}, true},
+		{"--worktree among other args", []string{"-p", "hello", "--worktree"}, true},
+		{"no worktree flag", []string{"-p", "hello"}, false},
+		{"empty args", nil, false},
+		{"similar but not worktree", []string{"--worktrees"}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := hasWorktreeFlag(tt.args)
+			if got != tt.want {
+				t.Errorf("hasWorktreeFlag(%v) = %v, want %v", tt.args, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestVersionOutput(t *testing.T) {
 	// Verify version constant is accessible and non-empty
 	if version.Version == "" {

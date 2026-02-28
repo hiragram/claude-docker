@@ -1,0 +1,28 @@
+layout {
+    pane size=1 borderless=true {
+        plugin location="tab-bar"
+    }
+    pane split_direction="horizontal" {
+        pane size="70%" split_direction="vertical" {
+            pane size="30%" cwd="" name="Plans" {
+                command "bash"
+                args "-c" "{{.ScriptsDir}}/plans-watcher.sh"
+            }
+            pane command="claude-docker" name="Claude Code"
+            pane size=40 cwd="" name="Changed Files" {
+                command "bash"
+                args "-c" "{{.ScriptsDir}}/git-diff-picker.sh"
+            }
+        }
+        pane size="30%" split_direction="vertical" {
+            pane size="70%" name="Terminal"
+            pane size="30%" cwd="" name="PR Status" {
+                command "bash"
+                args "-c" "{{.ScriptsDir}}/pr-status.sh"
+            }
+        }
+    }
+    pane size=2 borderless=true {
+        plugin location="status-bar"
+    }
+}

@@ -12,6 +12,7 @@ import (
 	"github.com/hiragram/claude-docker/internal/image"
 	"github.com/hiragram/claude-docker/internal/mount"
 	"github.com/hiragram/claude-docker/internal/version"
+	"github.com/hiragram/claude-docker/internal/worktree"
 )
 
 const (
@@ -133,6 +134,14 @@ func Run(args []string) int {
 		return 0
 	}
 
+	if hasWorktreeFlag(args) {
+		if err := worktree.Run(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			return 1
+		}
+		return 0
+	}
+
 	runner, err := NewRunner()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -151,6 +160,16 @@ func Run(args []string) int {
 func hasVersionFlag(args []string) bool {
 	for _, a := range args {
 		if a == "--version" || a == "-v" {
+			return true
+		}
+	}
+	return false
+}
+
+// hasWorktreeFlag checks if the args contain --worktree.
+func hasWorktreeFlag(args []string) bool {
+	for _, a := range args {
+		if a == "--worktree" {
 			return true
 		}
 	}
