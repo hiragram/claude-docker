@@ -46,7 +46,7 @@ func TestExecute_NewVersionAvailable(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/repos/hiragram/claude-docker/releases/latest", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{
+		_, _ = fmt.Fprintf(w, `{
 			"tag_name": "v0.2.0",
 			"assets": [
 				{
@@ -56,8 +56,8 @@ func TestExecute_NewVersionAvailable(t *testing.T) {
 			]
 		}`, "http://"+r.Host)
 	})
-	mux.HandleFunc("/download/archive.tar.gz", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(archive)
+	mux.HandleFunc("/download/archive.tar.gz", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write(archive)
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
@@ -110,8 +110,8 @@ func TestExecute_NewVersionAvailable(t *testing.T) {
 
 func TestExecute_AlreadyUpToDate(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/repos/hiragram/claude-docker/releases/latest", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `{"tag_name": "v0.1.0", "assets": []}`)
+	mux.HandleFunc("/repos/hiragram/claude-docker/releases/latest", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = fmt.Fprint(w, `{"tag_name": "v0.1.0", "assets": []}`)
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
@@ -169,8 +169,8 @@ func TestExecute_NetworkError(t *testing.T) {
 
 func TestExecute_NoMatchingAsset(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/repos/hiragram/claude-docker/releases/latest", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, `{
+	mux.HandleFunc("/repos/hiragram/claude-docker/releases/latest", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = fmt.Fprint(w, `{
 			"tag_name": "v0.2.0",
 			"assets": [
 				{"name": "claude-docker_linux_amd64.tar.gz", "browser_download_url": "https://example.com/linux.tar.gz"}
@@ -222,10 +222,10 @@ func TestExtractBinary_NotFound(t *testing.T) {
 	gw := gzip.NewWriter(&buf)
 	tw := tar.NewWriter(gw)
 	data := []byte("some content")
-	tw.WriteHeader(&tar.Header{Name: "other-file", Size: int64(len(data)), Mode: 0644})
-	tw.Write(data)
-	tw.Close()
-	gw.Close()
+	_ = tw.WriteHeader(&tar.Header{Name: "other-file", Size: int64(len(data)), Mode: 0644})
+	_, _ = tw.Write(data)
+	_ = tw.Close()
+	_ = gw.Close()
 
 	_, err := extractBinary(buf.Bytes())
 	if err == nil {

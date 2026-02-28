@@ -43,7 +43,7 @@ func FetchLatestRelease(client HTTPClient) (*ReleaseInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("fetching latest release: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)

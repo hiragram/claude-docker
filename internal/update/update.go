@@ -40,7 +40,7 @@ func Run(currentVersion string) error {
 
 // Execute performs the update workflow.
 func (u *Updater) Execute() error {
-	fmt.Fprintln(u.Stderr, "Checking for updates...")
+	_, _ = fmt.Fprintln(u.Stderr, "Checking for updates...")
 
 	// 1. Fetch latest release
 	release, err := FetchLatestRelease(u.HTTPClient)
@@ -56,11 +56,11 @@ func (u *Updater) Execute() error {
 		return fmt.Errorf("comparing versions: %w", err)
 	}
 	if !newer {
-		fmt.Fprintf(u.Stderr, "claude-docker %s is already the latest version.\n", u.CurrentVersion)
+		_, _ = fmt.Fprintf(u.Stderr, "claude-docker %s is already the latest version.\n", u.CurrentVersion)
 		return nil
 	}
 
-	fmt.Fprintf(u.Stderr, "Updating claude-docker: %s → %s\n", u.CurrentVersion, latestVersion)
+	_, _ = fmt.Fprintf(u.Stderr, "Updating claude-docker: %s → %s\n", u.CurrentVersion, latestVersion)
 
 	// 3. Find asset URL
 	assetURL, err := FindAssetURL(release, u.GOOS, u.GOARCH)
@@ -69,7 +69,7 @@ func (u *Updater) Execute() error {
 	}
 
 	// 4. Download archive
-	fmt.Fprintf(u.Stderr, "Downloading for %s/%s...\n", u.GOOS, u.GOARCH)
+	_, _ = fmt.Fprintf(u.Stderr, "Downloading for %s/%s...\n", u.GOOS, u.GOARCH)
 	archiveData, err := u.download(assetURL)
 	if err != nil {
 		return fmt.Errorf("downloading release: %w", err)
@@ -92,7 +92,7 @@ func (u *Updater) Execute() error {
 		return fmt.Errorf("replacing binary: %w", err)
 	}
 
-	fmt.Fprintln(u.Stderr, "Updated successfully! Run 'claude-docker --version' to verify.")
+	_, _ = fmt.Fprintln(u.Stderr, "Updated successfully! Run 'claude-docker --version' to verify.")
 	return nil
 }
 
@@ -107,7 +107,7 @@ func (u *Updater) download(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
@@ -122,7 +122,7 @@ func extractBinary(archiveData []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("opening gzip: %w", err)
 	}
-	defer gr.Close()
+	defer func() { _ = gr.Close() }()
 
 	tr := tar.NewReader(gr)
 	for {
@@ -170,16 +170,16 @@ func replaceBinary(targetPath string, newBinary []byte) error {
 	// Clean up on any failure
 	defer func() {
 		if tmpPath != "" {
-			os.Remove(tmpPath)
+			_ = os.Remove(tmpPath)
 		}
 	}()
 
 	if _, err := tmpFile.Write(newBinary); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return fmt.Errorf("writing temp file: %w", err)
 	}
 	if err := tmpFile.Chmod(0755); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return fmt.Errorf("setting permissions: %w", err)
 	}
 	if err := tmpFile.Close(); err != nil {
