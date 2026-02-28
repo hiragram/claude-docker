@@ -340,6 +340,30 @@ func TestHasWorktreeFlag(t *testing.T) {
 	}
 }
 
+func TestHasUpdateSubcommand(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want bool
+	}{
+		{"update as first arg", []string{"update"}, true},
+		{"update with trailing args", []string{"update", "--force"}, true},
+		{"update not first", []string{"-p", "update"}, false},
+		{"empty args", nil, false},
+		{"similar but not update", []string{"updates"}, false},
+		{"flag-style update", []string{"--update"}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := hasUpdateSubcommand(tt.args)
+			if got != tt.want {
+				t.Errorf("hasUpdateSubcommand(%v) = %v, want %v", tt.args, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestVersionOutput(t *testing.T) {
 	// Verify version constant is accessible and non-empty
 	if version.Version == "" {
