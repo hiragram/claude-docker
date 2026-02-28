@@ -11,6 +11,7 @@ import (
 	"github.com/hiragram/claude-docker/internal/docker"
 	"github.com/hiragram/claude-docker/internal/image"
 	"github.com/hiragram/claude-docker/internal/mount"
+	"github.com/hiragram/claude-docker/internal/update"
 	"github.com/hiragram/claude-docker/internal/version"
 	"github.com/hiragram/claude-docker/internal/worktree"
 )
@@ -142,6 +143,14 @@ func Run(args []string) int {
 		return 0
 	}
 
+	if hasUpdateSubcommand(args) {
+		if err := update.Run(version.Version); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			return 1
+		}
+		return 0
+	}
+
 	runner, err := NewRunner()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -174,4 +183,9 @@ func hasWorktreeFlag(args []string) bool {
 		}
 	}
 	return false
+}
+
+// hasUpdateSubcommand checks if the first argument is "update".
+func hasUpdateSubcommand(args []string) bool {
+	return len(args) > 0 && args[0] == "update"
 }
