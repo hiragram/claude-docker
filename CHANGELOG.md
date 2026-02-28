@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0](https://github.com/hiragram/agent-workspace/compare/v0.2.0...v0.3.0) (2026-02-28)
+
+
+### Features
+
+* refactor claude-docker into agent-workspace with YAML profile-based configuration ([2608e4b](https://github.com/hiragram/agent-workspace/commit/2608e4b52fc3b47522929690fdca1b61b10ffe32))
+* refactor to agent-workspace with YAML profile config ([ca0855b](https://github.com/hiragram/agent-workspace/commit/ca0855b5a83f39812e9b1c5870d63f362b3b647b))
+
+
+### Bug Fixes
+
+* goreleaser archive name to match binary name ([3b86a4b](https://github.com/hiragram/agent-workspace/commit/3b86a4b70b042b51842c67a18fd67afaaf00ec22))
+* use binary name in goreleaser archive name_template ([1a0f30f](https://github.com/hiragram/agent-workspace/commit/1a0f30fe9b03681c6d825317436d1bc7b967b6a1))
+
 ## [0.2.0](https://github.com/hiragram/claude-docker/compare/v0.1.0...v0.2.0) (2026-02-28)
 
 
