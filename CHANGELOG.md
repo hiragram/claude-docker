@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/hiragram/agent-workspace/compare/v0.3.0...v0.4.0) (2026-02-28)
+
+
+### Features
+
+* add `aw profiles` subcommand ([1c4964d](https://github.com/hiragram/agent-workspace/commit/1c4964d1a66aaeaeb9f5a2152ea59530e2972640))
+* add `aw profiles` subcommand to list available profiles ([f7ac122](https://github.com/hiragram/agent-workspace/commit/f7ac122c28addbafabdd388720fb97a9ce7ed082))
+
 ## [0.3.0](https://github.com/hiragram/agent-workspace/compare/v0.2.0...v0.3.0) (2026-02-28)
 
 
