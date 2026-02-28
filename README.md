@@ -36,6 +36,8 @@ aw --version
 
 ## Configuration
 
+> **[Detailed Configuration Guide](docs/configuration.md)** -- Full reference for all options, validation rules, and examples.
+
 Create `.agent-workspace.yml` in your git repository root:
 
 ```yaml
