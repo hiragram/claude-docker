@@ -1,3 +1,5 @@
-module github.com/hiragram/claude-docker
+module github.com/hiragram/agent-workspace
 
 go 1.23
+
+require gopkg.in/yaml.v3 v3.0.1 // indirect

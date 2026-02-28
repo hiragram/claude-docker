@@ -10,7 +10,7 @@ import (
 // and entrypoint.sh needed to build the Docker image.
 // The caller must call the returned cleanup function when done.
 func PrepareBuildContext() (dir string, cleanup func(), err error) {
-	tmpDir, err := os.MkdirTemp("", "claude-docker-build-*")
+	tmpDir, err := os.MkdirTemp("", "aw-build-*")
 	if err != nil {
 		return "", nil, fmt.Errorf("creating temp dir: %w", err)
 	}

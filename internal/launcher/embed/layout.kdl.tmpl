@@ -8,7 +8,10 @@ layout {
                 command "bash"
                 args "-c" "{{.ScriptsDir}}/plans-watcher.sh"
             }
-            pane command="claude-docker" name="Claude Code"
+            pane name="Claude Code" {
+                command "bash"
+                args "-c" "{{.ClaudeCommand}}"
+            }
             pane size=40 cwd="" name="Changed Files" {
                 command "bash"
                 args "-c" "{{.ScriptsDir}}/git-diff-picker.sh"

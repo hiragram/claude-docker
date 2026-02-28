@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/hiragram/claude-docker/internal/cmd"
+	"github.com/hiragram/agent-workspace/internal/cmd"
 )
 
 func main() {

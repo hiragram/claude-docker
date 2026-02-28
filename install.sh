@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-REPO="hiragram/claude-docker"
+REPO="hiragram/agent-workspace"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
-COMMAND_NAME="claude-docker"
+COMMAND_NAME="aw"
 
 echo "Installing $COMMAND_NAME..."
 
@@ -56,4 +56,4 @@ fi
 
 echo "Installed $COMMAND_NAME $LATEST to $INSTALL_DIR/$COMMAND_NAME"
 echo ""
-echo "Run '$COMMAND_NAME' to start Claude Code in Docker."
+echo "Run '$COMMAND_NAME' to start agent-workspace."

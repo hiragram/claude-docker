@@ -1,4 +1,4 @@
-package worktree
+package launcher
 
 import _ "embed"
 

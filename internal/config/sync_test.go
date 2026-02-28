@@ -146,7 +146,7 @@ func TestSyncSettings_SkipsMissingDirectories(t *testing.T) {
 
 func TestSyncSettings_CreatesContainerHome(t *testing.T) {
 	claudeHome := t.TempDir()
-	containerHome := filepath.Join(t.TempDir(), "nonexistent", "claude-docker")
+	containerHome := filepath.Join(t.TempDir(), "nonexistent", "agent-workspace")
 
 	syncer := NewSyncer()
 	if err := syncer.SyncSettings(claudeHome, containerHome); err != nil {

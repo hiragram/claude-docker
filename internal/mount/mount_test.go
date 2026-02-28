@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hiragram/claude-docker/internal/docker"
+	"github.com/hiragram/agent-workspace/internal/docker"
 )
 
 func newTestOpts(homeDir, workDir string) MountOptions {
@@ -13,8 +13,8 @@ func newTestOpts(homeDir, workDir string) MountOptions {
 		HomeDir:             homeDir,
 		WorkDir:             workDir,
 		ClaudeHome:          filepath.Join(homeDir, ".claude"),
-		ContainerClaudeHome: filepath.Join(homeDir, ".claude-docker"),
-		ContainerClaudeJSON: filepath.Join(homeDir, ".claude-docker.json"),
+		ContainerClaudeHome: filepath.Join(homeDir, ".agent-workspace"),
+		ContainerClaudeJSON: filepath.Join(homeDir, ".agent-workspace.json"),
 		VolumeName:          "claude-code-local",
 	}
 }

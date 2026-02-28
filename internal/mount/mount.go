@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hiragram/claude-docker/internal/docker"
+	"github.com/hiragram/agent-workspace/internal/docker"
 )
 
 // MountOptions contains the parameters needed to construct Docker mounts.
@@ -12,8 +12,8 @@ type MountOptions struct {
 	HomeDir             string // host user home directory
 	WorkDir             string // host working directory (workspace)
 	ClaudeHome          string // host ~/.claude
-	ContainerClaudeHome string // host ~/.claude-docker
-	ContainerClaudeJSON string // host ~/.claude-docker.json
+	ContainerClaudeHome string // host ~/.agent-workspace
+	ContainerClaudeJSON string // host ~/.agent-workspace.json
 	VolumeName          string // Docker volume name for Claude installation
 }
 

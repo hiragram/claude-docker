@@ -8,7 +8,7 @@ import (
 
 func TestEnsureOnboardingState_CreatesWhenMissing(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, ".claude-docker.json")
+	path := filepath.Join(dir, ".agent-workspace.json")
 
 	syncer := NewSyncer()
 	if err := syncer.EnsureOnboardingState(path); err != nil {
@@ -26,7 +26,7 @@ func TestEnsureOnboardingState_CreatesWhenMissing(t *testing.T) {
 
 func TestEnsureOnboardingState_CreatesWhenEmpty(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, ".claude-docker.json")
+	path := filepath.Join(dir, ".agent-workspace.json")
 
 	// Create empty file
 	if err := os.WriteFile(path, []byte(""), 0644); err != nil {
@@ -49,7 +49,7 @@ func TestEnsureOnboardingState_CreatesWhenEmpty(t *testing.T) {
 
 func TestEnsureOnboardingState_PreservesExisting(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, ".claude-docker.json")
+	path := filepath.Join(dir, ".agent-workspace.json")
 
 	existing := `{"hasCompletedOnboarding":true}`
 	if err := os.WriteFile(path, []byte(existing), 0644); err != nil {
