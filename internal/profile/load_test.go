@@ -233,6 +233,55 @@ profiles:
 	}
 }
 
+func TestParse_WorktreeOnEnd(t *testing.T) {
+	yaml := `
+profiles:
+  test:
+    worktree:
+      base: origin/main
+      on-create: "./scripts/setup.sh"
+      on-end: "./scripts/cleanup.sh"
+    environment: host
+    launch: claude
+`
+	cfg, err := Parse([]byte(yaml))
+	if err != nil {
+		t.Fatalf("Parse() error: %v", err)
+	}
+
+	p := cfg.Profiles["test"]
+	if p.Worktree == nil {
+		t.Fatal("Worktree should not be nil")
+	}
+	if p.Worktree.OnEnd != "./scripts/cleanup.sh" {
+		t.Errorf("OnEnd = %q, want %q", p.Worktree.OnEnd, "./scripts/cleanup.sh")
+	}
+}
+
+func TestParse_WorktreeWithoutOnEnd(t *testing.T) {
+	yaml := `
+profiles:
+  test:
+    worktree:
+      base: origin/main
+      on-create: "./scripts/setup.sh"
+    environment: host
+    launch: claude
+`
+	cfg, err := Parse([]byte(yaml))
+	if err != nil {
+		t.Fatalf("Parse() error: %v", err)
+	}
+
+	p := cfg.Profiles["test"]
+	if p.Worktree == nil {
+		t.Fatal("Worktree should not be nil")
+	}
+	if p.Worktree.OnEnd != "" {
+		t.Errorf("OnEnd should be empty, got %q", p.Worktree.OnEnd)
+	}
+}
+
 func TestLoad_NoGitRepo(t *testing.T) {
 	// Override findGitRoot to simulate not being in a git repo
 	orig := findGitRoot

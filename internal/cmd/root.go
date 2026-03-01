@@ -95,16 +95,38 @@ func Run(args []string) int {
 		WorkDir:     workDir,
 	}
 
+	// Warn about on-end limitations
+	if p.Worktree != nil && p.Worktree.OnEnd != "" &&
+		p.Environment == profile.EnvironmentHost &&
+		p.Launch != profile.LaunchZellij {
+		fmt.Fprintf(os.Stderr, "Warning: on-end hook will not run with environment: host + launch: %s (process is replaced via exec)\n", p.Launch)
+	}
+
 	// Build pipeline stages
 	stages := buildStages(p)
 	pipe := pipeline.New(stages...)
 
 	if err := pipe.Execute(context.Background(), ec); err != nil {
+		runOnEndIfConfigured(ec)
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		return 1
 	}
 
+	runOnEndIfConfigured(ec)
 	return 0
+}
+
+func runOnEndIfConfigured(ec *pipeline.ExecutionContext) {
+	if ec.Profile.Worktree == nil || ec.Profile.Worktree.OnEnd == "" {
+		return
+	}
+	if ec.WorktreePath == "" {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "Running on-end hook...\n")
+	if err := stage.RunOnEndHook(ec); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: on-end hook failed: %v\n", err)
+	}
 }
 
 // buildStages creates the pipeline stages based on the profile configuration.

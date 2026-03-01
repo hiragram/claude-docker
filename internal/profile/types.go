@@ -25,6 +25,7 @@ type Profile struct {
 type WorktreeConfig struct {
 	Base     string `yaml:"base,omitempty"`      // default: "origin/main"
 	OnCreate string `yaml:"on-create,omitempty"` // shell command to run after worktree creation
+	OnEnd    string `yaml:"on-end,omitempty"`    // shell command to run after launched process exits
 }
 
 // EffectiveBase returns the base ref, defaulting to "origin/main" if empty.

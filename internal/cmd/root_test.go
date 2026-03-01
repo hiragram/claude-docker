@@ -3,6 +3,7 @@ package cmd
 import (
 	"testing"
 
+	"github.com/hiragram/agent-workspace/internal/pipeline"
 	"github.com/hiragram/agent-workspace/internal/profile"
 )
 
@@ -82,6 +83,43 @@ func TestBuildStages_HostClaude(t *testing.T) {
 	if stages[0].Name() != "launch" {
 		t.Errorf("stage[0] = %q, want 'launch'", stages[0].Name())
 	}
+}
+
+func TestRunOnEndIfConfigured_SkipsWhenNoWorktree(t *testing.T) {
+	ec := &pipeline.ExecutionContext{
+		Profile: profile.Profile{
+			Environment: profile.EnvironmentHost,
+			Launch:      profile.LaunchShell,
+		},
+	}
+	// Should not panic or error
+	runOnEndIfConfigured(ec)
+}
+
+func TestRunOnEndIfConfigured_SkipsWhenNoOnEnd(t *testing.T) {
+	ec := &pipeline.ExecutionContext{
+		Profile: profile.Profile{
+			Worktree:    &profile.WorktreeConfig{},
+			Environment: profile.EnvironmentHost,
+			Launch:      profile.LaunchShell,
+		},
+		WorktreePath: "/some/path",
+	}
+	// Should not panic or error
+	runOnEndIfConfigured(ec)
+}
+
+func TestRunOnEndIfConfigured_SkipsWhenWorktreePathEmpty(t *testing.T) {
+	ec := &pipeline.ExecutionContext{
+		Profile: profile.Profile{
+			Worktree:    &profile.WorktreeConfig{OnEnd: "echo done"},
+			Environment: profile.EnvironmentDocker,
+			Launch:      profile.LaunchZellij,
+		},
+		WorktreePath: "",
+	}
+	// Should not panic or error (WorktreeStage didn't run)
+	runOnEndIfConfigured(ec)
 }
 
 func TestDescribeProfile(t *testing.T) {
