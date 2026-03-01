@@ -275,6 +275,62 @@ func TestMergeConfig_DefaultPreservedWhenUserEmpty(t *testing.T) {
 	}
 }
 
+func TestMergeProfile_EnvMerged(t *testing.T) {
+	base := Profile{
+		Environment: EnvironmentDocker,
+		Launch:      LaunchClaude,
+		Env:         map[string]string{"A": "1", "B": "2"},
+	}
+	override := Profile{
+		Env: map[string]string{"B": "override", "C": "3"},
+	}
+
+	merged := MergeProfile(base, override)
+
+	if merged.Env["A"] != "1" {
+		t.Errorf("Env[A] = %q, want %q", merged.Env["A"], "1")
+	}
+	if merged.Env["B"] != "override" {
+		t.Errorf("Env[B] = %q, want %q (override should win)", merged.Env["B"], "override")
+	}
+	if merged.Env["C"] != "3" {
+		t.Errorf("Env[C] = %q, want %q", merged.Env["C"], "3")
+	}
+}
+
+func TestMergeProfile_NilEnvOverridePreservesBase(t *testing.T) {
+	base := Profile{
+		Environment: EnvironmentDocker,
+		Launch:      LaunchClaude,
+		Env:         map[string]string{"A": "1"},
+	}
+	override := Profile{}
+
+	merged := MergeProfile(base, override)
+
+	if merged.Env["A"] != "1" {
+		t.Errorf("Env[A] = %q, want %q (should be preserved from base)", merged.Env["A"], "1")
+	}
+}
+
+func TestMergeProfile_EnvDoesNotMutateBase(t *testing.T) {
+	base := Profile{
+		Environment: EnvironmentDocker,
+		Launch:      LaunchClaude,
+		Env:         map[string]string{"A": "1"},
+	}
+	override := Profile{
+		Env: map[string]string{"B": "2"},
+	}
+
+	MergeProfile(base, override)
+
+	// base.Env should not have been mutated
+	if _, ok := base.Env["B"]; ok {
+		t.Error("base.Env should not have been mutated")
+	}
+}
+
 func TestMergeConfig_WorktreeEmptyObjectEnablesWorktree(t *testing.T) {
 	builtin := Config{
 		Profiles: map[string]Profile{

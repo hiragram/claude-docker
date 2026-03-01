@@ -46,15 +46,20 @@ func (l *ClaudeLauncher) launchDockerClaude(ctx context.Context, ec *pipeline.Ex
 
 	command := []string{"claude", "--dangerously-skip-permissions"}
 
+	envVars := make(map[string]string, len(ec.EnvVars)+2)
+	for k, v := range ec.EnvVars {
+		envVars[k] = v
+	}
+	// Hardcoded vars always win — users cannot override these
+	envVars["HOST_CLAUDE_HOME"] = claudeHomePath(ec.HomeDir)
+	envVars["HOST_WORKSPACE"] = ec.WorkDir
+
 	runConfig := docker.RunConfig{
 		ImageName: ec.DockerImage,
 		Mounts:    ec.DockerMounts,
-		EnvVars: map[string]string{
-			"HOST_CLAUDE_HOME": claudeHomePath(ec.HomeDir),
-			"HOST_WORKSPACE":   ec.WorkDir,
-		},
-		WorkDir: ec.WorkDir,
-		Command: command,
+		EnvVars:   envVars,
+		WorkDir:   ec.WorkDir,
+		Command:   command,
 	}
 
 	return client.Run(ctx, runConfig)

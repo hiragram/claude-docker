@@ -23,4 +23,7 @@ type ExecutionContext struct {
 	DockerImage  string
 	DockerMounts []docker.Mount
 	DockerVolume string
+
+	// Set by EnvStage (if applicable)
+	EnvVars map[string]string // custom env vars to pass into Docker container
 }

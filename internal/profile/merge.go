@@ -17,6 +17,16 @@ func MergeProfile(base, override Profile) Profile {
 	if override.Zellij != nil {
 		merged.Zellij = override.Zellij
 	}
+	if override.Env != nil {
+		envCopy := make(map[string]string, len(merged.Env)+len(override.Env))
+		for k, v := range merged.Env {
+			envCopy[k] = v
+		}
+		for k, v := range override.Env {
+			envCopy[k] = v
+		}
+		merged.Env = envCopy
+	}
 
 	return merged
 }

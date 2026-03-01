@@ -143,7 +143,12 @@ func buildStages(p profile.Profile) []pipeline.Stage {
 		stages = append(stages, stage.NewDockerStage())
 	}
 
-	// Stage 3: Launch (always)
+	// Stage 3: Env loading (conditional — only for Docker, where custom env vars are needed)
+	if p.Environment == profile.EnvironmentDocker {
+		stages = append(stages, &stage.EnvStage{})
+	}
+
+	// Stage 4: Launch (always)
 	stages = append(stages, &stage.LaunchStage{})
 
 	return stages

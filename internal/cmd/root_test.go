@@ -14,15 +14,18 @@ func TestBuildStages_DockerClaude(t *testing.T) {
 	}
 	stages := buildStages(p)
 
-	// Should have DockerStage + LaunchStage = 2 stages
-	if len(stages) != 2 {
-		t.Fatalf("got %d stages, want 2", len(stages))
+	// Should have DockerStage + EnvStage + LaunchStage = 3 stages
+	if len(stages) != 3 {
+		t.Fatalf("got %d stages, want 3", len(stages))
 	}
 	if stages[0].Name() != "docker" {
 		t.Errorf("stage[0] = %q, want 'docker'", stages[0].Name())
 	}
-	if stages[1].Name() != "launch" {
-		t.Errorf("stage[1] = %q, want 'launch'", stages[1].Name())
+	if stages[1].Name() != "env" {
+		t.Errorf("stage[1] = %q, want 'env'", stages[1].Name())
+	}
+	if stages[2].Name() != "launch" {
+		t.Errorf("stage[2] = %q, want 'launch'", stages[2].Name())
 	}
 }
 
@@ -54,9 +57,9 @@ func TestBuildStages_WorktreeDockerZellij(t *testing.T) {
 	}
 	stages := buildStages(p)
 
-	// Should have WorktreeStage + DockerStage + LaunchStage = 3 stages
-	if len(stages) != 3 {
-		t.Fatalf("got %d stages, want 3", len(stages))
+	// Should have WorktreeStage + DockerStage + EnvStage + LaunchStage = 4 stages
+	if len(stages) != 4 {
+		t.Fatalf("got %d stages, want 4", len(stages))
 	}
 	if stages[0].Name() != "worktree" {
 		t.Errorf("stage[0] = %q, want 'worktree'", stages[0].Name())
@@ -64,8 +67,11 @@ func TestBuildStages_WorktreeDockerZellij(t *testing.T) {
 	if stages[1].Name() != "docker" {
 		t.Errorf("stage[1] = %q, want 'docker'", stages[1].Name())
 	}
-	if stages[2].Name() != "launch" {
-		t.Errorf("stage[2] = %q, want 'launch'", stages[2].Name())
+	if stages[2].Name() != "env" {
+		t.Errorf("stage[2] = %q, want 'env'", stages[2].Name())
+	}
+	if stages[3].Name() != "launch" {
+		t.Errorf("stage[3] = %q, want 'launch'", stages[3].Name())
 	}
 }
 

@@ -15,10 +15,11 @@ type Config struct {
 
 // Profile describes a single named workspace profile.
 type Profile struct {
-	Worktree    *WorktreeConfig `yaml:"worktree,omitempty"`
-	Environment Environment     `yaml:"environment"`
-	Launch      LaunchMode      `yaml:"launch"`
-	Zellij      *ZellijConfig   `yaml:"zellij,omitempty"`
+	Worktree    *WorktreeConfig   `yaml:"worktree,omitempty"`
+	Environment Environment       `yaml:"environment"`
+	Launch      LaunchMode        `yaml:"launch"`
+	Zellij      *ZellijConfig     `yaml:"zellij,omitempty"`
+	Env         map[string]string `yaml:"env,omitempty"` // custom env vars to pass into Docker container
 }
 
 // WorktreeConfig controls git worktree creation.
