@@ -27,6 +27,9 @@ func MergeProfile(base, override Profile) Profile {
 		}
 		merged.Env = envCopy
 	}
+	if override.Dockerfile != "" {
+		merged.Dockerfile = override.Dockerfile
+	}
 
 	return merged
 }

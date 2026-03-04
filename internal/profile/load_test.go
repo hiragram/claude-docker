@@ -282,6 +282,25 @@ profiles:
 	}
 }
 
+func TestParse_Dockerfile(t *testing.T) {
+	yaml := `
+profiles:
+  test:
+    environment: docker
+    launch: claude
+    dockerfile: docker/Dockerfile.custom
+`
+	cfg, err := Parse([]byte(yaml))
+	if err != nil {
+		t.Fatalf("Parse() error: %v", err)
+	}
+
+	p := cfg.Profiles["test"]
+	if p.Dockerfile != "docker/Dockerfile.custom" {
+		t.Errorf("Dockerfile = %q, want %q", p.Dockerfile, "docker/Dockerfile.custom")
+	}
+}
+
 func TestLoad_NoGitRepo(t *testing.T) {
 	// Override findGitRoot to simulate not being in a git repo
 	orig := findGitRoot

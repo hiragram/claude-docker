@@ -42,8 +42,18 @@ func TestEmbeddedEntrypointContent(t *testing.T) {
 	}
 }
 
+func TestDefaultDockerfile(t *testing.T) {
+	content := DefaultDockerfile()
+	if len(content) == 0 {
+		t.Error("DefaultDockerfile() returned empty content")
+	}
+	if string(content) != string(dockerfile) {
+		t.Error("DefaultDockerfile() content does not match embedded dockerfile")
+	}
+}
+
 func TestPrepareBuildContext(t *testing.T) {
-	dir, cleanup, err := PrepareBuildContext()
+	dir, cleanup, err := PrepareBuildContext("")
 	if err != nil {
 		t.Fatalf("PrepareBuildContext() error: %v", err)
 	}
@@ -85,8 +95,51 @@ func TestPrepareBuildContext(t *testing.T) {
 	}
 }
 
+func TestPrepareBuildContext_CustomDockerfile(t *testing.T) {
+	customDir := t.TempDir()
+	customContent := []byte("FROM alpine:latest\nRUN echo custom\n")
+	customPath := filepath.Join(customDir, "Dockerfile.custom")
+	if err := os.WriteFile(customPath, customContent, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	dir, cleanup, err := PrepareBuildContext(customPath)
+	if err != nil {
+		t.Fatalf("PrepareBuildContext() error: %v", err)
+	}
+	defer cleanup()
+
+	// Dockerfile should contain custom content
+	dfContent, err := os.ReadFile(filepath.Join(dir, "Dockerfile"))
+	if err != nil {
+		t.Fatalf("reading Dockerfile: %v", err)
+	}
+	if string(dfContent) != string(customContent) {
+		t.Errorf("Dockerfile content = %q, want %q", string(dfContent), string(customContent))
+	}
+
+	// entrypoint.sh should still be the embedded default
+	epContent, err := os.ReadFile(filepath.Join(dir, "entrypoint.sh"))
+	if err != nil {
+		t.Fatalf("reading entrypoint.sh: %v", err)
+	}
+	if string(epContent) != string(entrypointSh) {
+		t.Error("entrypoint.sh should be the embedded default even with custom Dockerfile")
+	}
+}
+
+func TestPrepareBuildContext_CustomDockerfileNotFound(t *testing.T) {
+	_, _, err := PrepareBuildContext("/nonexistent/Dockerfile")
+	if err == nil {
+		t.Fatal("expected error for nonexistent custom Dockerfile")
+	}
+	if !strings.Contains(err.Error(), "reading custom Dockerfile") {
+		t.Errorf("error = %q, want containing 'reading custom Dockerfile'", err.Error())
+	}
+}
+
 func TestPrepareBuildContextCleanup(t *testing.T) {
-	dir, cleanup, err := PrepareBuildContext()
+	dir, cleanup, err := PrepareBuildContext("")
 	if err != nil {
 		t.Fatalf("PrepareBuildContext() error: %v", err)
 	}

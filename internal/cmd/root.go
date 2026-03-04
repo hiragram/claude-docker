@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hiragram/agent-workspace/internal/image"
 	"github.com/hiragram/agent-workspace/internal/pipeline"
 	"github.com/hiragram/agent-workspace/internal/profile"
 	"github.com/hiragram/agent-workspace/internal/stage"
@@ -30,6 +31,10 @@ func Run(args []string) int {
 
 	if len(args) > 0 && args[0] == "profiles" {
 		return runProfiles()
+	}
+
+	if len(args) > 0 && args[0] == "default-dockerfile" {
+		return runDefaultDockerfile()
 	}
 
 	// Determine profile name
@@ -199,6 +204,15 @@ func describeProfile(p profile.Profile) string {
 	parts = append(parts, string(p.Environment))
 	parts = append(parts, string(p.Launch))
 	return strings.Join(parts, " + ")
+}
+
+func runDefaultDockerfile() int {
+	_, err := os.Stdout.Write(image.DefaultDockerfile())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error writing Dockerfile: %v\n", err)
+		return 1
+	}
+	return 0
 }
 
 // hasVersionFlag checks if the args contain --version or -v.

@@ -128,6 +128,13 @@ func TestRunOnEndIfConfigured_SkipsWhenWorktreePathEmpty(t *testing.T) {
 	runOnEndIfConfigured(ec)
 }
 
+func TestRunDefaultDockerfile_ReturnsZero(t *testing.T) {
+	code := runDefaultDockerfile()
+	if code != 0 {
+		t.Errorf("runDefaultDockerfile() = %d, want 0", code)
+	}
+}
+
 func TestDescribeProfile(t *testing.T) {
 	tests := []struct {
 		name    string

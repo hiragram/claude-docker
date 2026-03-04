@@ -331,6 +331,37 @@ func TestMergeProfile_EnvDoesNotMutateBase(t *testing.T) {
 	}
 }
 
+func TestMergeProfile_OverrideDockerfile(t *testing.T) {
+	base := Profile{
+		Environment: EnvironmentDocker,
+		Launch:      LaunchClaude,
+	}
+	override := Profile{
+		Dockerfile: "custom/Dockerfile",
+	}
+
+	merged := MergeProfile(base, override)
+
+	if merged.Dockerfile != "custom/Dockerfile" {
+		t.Errorf("Dockerfile = %q, want %q", merged.Dockerfile, "custom/Dockerfile")
+	}
+}
+
+func TestMergeProfile_EmptyDockerfileOverridePreservesBase(t *testing.T) {
+	base := Profile{
+		Environment: EnvironmentDocker,
+		Launch:      LaunchClaude,
+		Dockerfile:  "base/Dockerfile",
+	}
+	override := Profile{}
+
+	merged := MergeProfile(base, override)
+
+	if merged.Dockerfile != "base/Dockerfile" {
+		t.Errorf("Dockerfile = %q, want %q (should be preserved from base)", merged.Dockerfile, "base/Dockerfile")
+	}
+}
+
 func TestMergeConfig_WorktreeEmptyObjectEnablesWorktree(t *testing.T) {
 	builtin := Config{
 		Profiles: map[string]Profile{

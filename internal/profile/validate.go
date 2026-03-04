@@ -32,6 +32,11 @@ func Validate(p Profile) error {
 		return fmt.Errorf("zellij config is only valid with launch: zellij")
 	}
 
+	// Validate dockerfile is only used with environment: docker
+	if p.Dockerfile != "" && p.Environment != EnvironmentDocker {
+		return fmt.Errorf("dockerfile is only valid with environment: docker")
+	}
+
 	return nil
 }
 

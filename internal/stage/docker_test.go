@@ -69,6 +69,17 @@ func (m *mockMountBuilder) BuildMounts(_ mount.MountOptions) ([]docker.Mount, er
 	return m.mounts, m.err
 }
 
+func TestResolveDockerfilePath_Absolute(t *testing.T) {
+	absPath := "/absolute/path/Dockerfile"
+	resolved, err := resolveDockerfilePath(absPath)
+	if err != nil {
+		t.Fatalf("resolveDockerfilePath() error: %v", err)
+	}
+	if resolved != absPath {
+		t.Errorf("resolved = %q, want %q", resolved, absPath)
+	}
+}
+
 func TestDockerStage_Name(t *testing.T) {
 	s := &DockerStage{}
 	if s.Name() != "docker" {

@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/hiragram/agent-workspace/internal/config"
 	"github.com/hiragram/agent-workspace/internal/docker"
@@ -42,8 +44,18 @@ func (s *DockerStage) Run(ctx context.Context, ec *pipeline.ExecutionContext) er
 		return fmt.Errorf("docker is not available: %w", err)
 	}
 
-	// 2. Build Docker image
-	buildDir, cleanup, err := image.PrepareBuildContext()
+	// 2. Resolve custom Dockerfile path
+	customDockerfile := ""
+	if ec.Profile.Dockerfile != "" {
+		resolved, err := resolveDockerfilePath(ec.Profile.Dockerfile)
+		if err != nil {
+			return fmt.Errorf("resolving dockerfile path: %w", err)
+		}
+		customDockerfile = resolved
+	}
+
+	// 3. Build Docker image
+	buildDir, cleanup, err := image.PrepareBuildContext(customDockerfile)
 	if err != nil {
 		return fmt.Errorf("preparing build context: %w", err)
 	}
@@ -92,6 +104,23 @@ func (s *DockerStage) Run(ctx context.Context, ec *pipeline.ExecutionContext) er
 	ec.DockerVolume = defaultVolumeName
 
 	return nil
+}
+
+// resolveDockerfilePath resolves a Dockerfile path.
+// If the path is absolute, it is returned as-is.
+// If relative, it is resolved against the git repo root.
+func resolveDockerfilePath(dockerfilePath string) (string, error) {
+	if filepath.IsAbs(dockerfilePath) {
+		return dockerfilePath, nil
+	}
+
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("finding git root to resolve dockerfile path: %w", err)
+	}
+	repoRoot := strings.TrimSpace(string(out))
+	return filepath.Join(repoRoot, dockerfilePath), nil
 }
 
 func claudeHomePath(homeDir string) string {
