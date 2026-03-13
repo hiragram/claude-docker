@@ -2,7 +2,7 @@ FROM debian:bookworm-slim
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git curl ca-certificates wget openssh-client \
-      python3 python3-pip python3-venv && \
+      python3 python3-pip python3-venv sudo && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p -m 755 /etc/apt/keyrings && \
@@ -27,7 +27,8 @@ RUN ARCH="$(dpkg --print-architecture)" && \
     else echo "Unsupported architecture: $ARCH" && exit 1; fi && \
     curl -fsSL "https://go.dev/dl/go1.23.6.linux-${GOARCH}.tar.gz" | tar -C /usr/local -xz
 
-RUN useradd -m -s /bin/bash claude
+RUN useradd -m -s /bin/bash claude && \
+    echo 'claude ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 ENV PATH="/usr/local/go/bin:/home/claude/.local/bin:${PATH}"
 
