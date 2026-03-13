@@ -2,7 +2,7 @@ FROM debian:bookworm-slim
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git curl ca-certificates wget openssh-client \
-      python3 python3-pip python3-venv && \
+      python3 python3-pip python3-venv sudo && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p -m 755 /etc/apt/keyrings && \
@@ -21,7 +21,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     corepack enable && \
     corepack prepare pnpm@latest --activate
 
-RUN useradd -m -s /bin/bash claude
+RUN useradd -m -s /bin/bash claude && \
+    echo 'claude ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 ENV PATH="/home/claude/.local/bin:${PATH}"
 
