@@ -2,9 +2,12 @@ package stage
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/hiragram/agent-workspace/internal/config"
 	"github.com/hiragram/agent-workspace/internal/docker"
@@ -42,15 +45,37 @@ func (s *DockerStage) Run(ctx context.Context, ec *pipeline.ExecutionContext) er
 		return fmt.Errorf("docker is not available: %w", err)
 	}
 
-	// 2. Build Docker image
-	buildDir, cleanup, err := image.PrepareBuildContext()
+	// 2. Resolve custom Dockerfile path
+	customDockerfile := ""
+	if ec.Profile.Dockerfile != "" {
+		resolved, err := resolveDockerfilePath(ec.Profile.Dockerfile)
+		if err != nil {
+			return fmt.Errorf("resolving dockerfile path: %w", err)
+		}
+		customDockerfile = resolved
+	}
+
+	// 3. Build Docker image
+	buildDir, cleanup, err := image.PrepareBuildContext(customDockerfile)
 	if err != nil {
 		return fmt.Errorf("preparing build context: %w", err)
 	}
 	defer cleanup()
 
-	fmt.Fprintf(os.Stderr, "Building Docker image '%s'...\n", defaultImageName)
-	if err := s.DockerClient.Build(ctx, defaultImageName, buildDir); err != nil {
+	// Compute image tag from Dockerfile content hash to bust Docker cache
+	// when the Dockerfile changes.
+	imageName := defaultImageName
+	if dfBytes, err := os.ReadFile(filepath.Join(buildDir, "Dockerfile")); err == nil {
+		hash := fmt.Sprintf("%x", sha256.Sum256(dfBytes))[:12]
+		imageName = fmt.Sprintf("%s:%s", defaultImageName, hash)
+	}
+
+	if customDockerfile != "" {
+		fmt.Fprintf(os.Stderr, "Building Docker image '%s' (custom Dockerfile: %s)...\n", imageName, ec.Profile.Dockerfile)
+	} else {
+		fmt.Fprintf(os.Stderr, "Building Docker image '%s'...\n", imageName)
+	}
+	if err := s.DockerClient.Build(ctx, imageName, buildDir); err != nil {
 		return fmt.Errorf("building image: %w", err)
 	}
 
@@ -87,11 +112,28 @@ func (s *DockerStage) Run(ctx context.Context, ec *pipeline.ExecutionContext) er
 	}
 
 	// 7. Update execution context
-	ec.DockerImage = defaultImageName
+	ec.DockerImage = imageName
 	ec.DockerMounts = mounts
 	ec.DockerVolume = defaultVolumeName
 
 	return nil
+}
+
+// resolveDockerfilePath resolves a Dockerfile path.
+// If the path is absolute, it is returned as-is.
+// If relative, it is resolved against the git repo root.
+func resolveDockerfilePath(dockerfilePath string) (string, error) {
+	if filepath.IsAbs(dockerfilePath) {
+		return dockerfilePath, nil
+	}
+
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("finding git root to resolve dockerfile path: %w", err)
+	}
+	repoRoot := strings.TrimSpace(string(out))
+	return filepath.Join(repoRoot, dockerfilePath), nil
 }
 
 func claudeHomePath(homeDir string) string {

@@ -21,10 +21,16 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     corepack enable && \
     corepack prepare pnpm@latest --activate
 
+RUN ARCH="$(dpkg --print-architecture)" && \
+    if [ "$ARCH" = "amd64" ]; then GOARCH="amd64"; \
+    elif [ "$ARCH" = "arm64" ]; then GOARCH="arm64"; \
+    else echo "Unsupported architecture: $ARCH" && exit 1; fi && \
+    curl -fsSL "https://go.dev/dl/go1.23.6.linux-${GOARCH}.tar.gz" | tar -C /usr/local -xz
+
 RUN useradd -m -s /bin/bash claude && \
     echo 'claude ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-ENV PATH="/home/claude/.local/bin:${PATH}"
+ENV PATH="/usr/local/go/bin:/home/claude/.local/bin:${PATH}"
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

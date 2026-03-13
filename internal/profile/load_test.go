@@ -173,6 +173,132 @@ profiles:
 	if cfg.Default != "my-profile" {
 		t.Errorf("Default = %q, want %q", cfg.Default, "my-profile")
 	}
+
+	// Builtin profiles should also be present after merge
+	if _, ok := cfg.Profiles["claude"]; !ok {
+		t.Error("builtin profile 'claude' should be preserved after merge")
+	}
+	if _, ok := cfg.Profiles["worktree-zellij"]; !ok {
+		t.Error("builtin profile 'worktree-zellij' should be preserved after merge")
+	}
+	if _, ok := cfg.Profiles["my-profile"]; !ok {
+		t.Error("user profile 'my-profile' should be present")
+	}
+}
+
+func TestParse_WorktreeOnCreate(t *testing.T) {
+	yaml := `
+profiles:
+  test:
+    worktree:
+      base: origin/main
+      on-create: "./scripts/setup.sh"
+    environment: host
+    launch: claude
+`
+	cfg, err := Parse([]byte(yaml))
+	if err != nil {
+		t.Fatalf("Parse() error: %v", err)
+	}
+
+	p := cfg.Profiles["test"]
+	if p.Worktree == nil {
+		t.Fatal("Worktree should not be nil")
+	}
+	if p.Worktree.OnCreate != "./scripts/setup.sh" {
+		t.Errorf("OnCreate = %q, want %q", p.Worktree.OnCreate, "./scripts/setup.sh")
+	}
+}
+
+func TestParse_WorktreeWithoutOnCreate(t *testing.T) {
+	yaml := `
+profiles:
+  test:
+    worktree:
+      base: origin/main
+    environment: host
+    launch: claude
+`
+	cfg, err := Parse([]byte(yaml))
+	if err != nil {
+		t.Fatalf("Parse() error: %v", err)
+	}
+
+	p := cfg.Profiles["test"]
+	if p.Worktree == nil {
+		t.Fatal("Worktree should not be nil")
+	}
+	if p.Worktree.OnCreate != "" {
+		t.Errorf("OnCreate should be empty, got %q", p.Worktree.OnCreate)
+	}
+}
+
+func TestParse_WorktreeOnEnd(t *testing.T) {
+	yaml := `
+profiles:
+  test:
+    worktree:
+      base: origin/main
+      on-create: "./scripts/setup.sh"
+      on-end: "./scripts/cleanup.sh"
+    environment: host
+    launch: claude
+`
+	cfg, err := Parse([]byte(yaml))
+	if err != nil {
+		t.Fatalf("Parse() error: %v", err)
+	}
+
+	p := cfg.Profiles["test"]
+	if p.Worktree == nil {
+		t.Fatal("Worktree should not be nil")
+	}
+	if p.Worktree.OnEnd != "./scripts/cleanup.sh" {
+		t.Errorf("OnEnd = %q, want %q", p.Worktree.OnEnd, "./scripts/cleanup.sh")
+	}
+}
+
+func TestParse_WorktreeWithoutOnEnd(t *testing.T) {
+	yaml := `
+profiles:
+  test:
+    worktree:
+      base: origin/main
+      on-create: "./scripts/setup.sh"
+    environment: host
+    launch: claude
+`
+	cfg, err := Parse([]byte(yaml))
+	if err != nil {
+		t.Fatalf("Parse() error: %v", err)
+	}
+
+	p := cfg.Profiles["test"]
+	if p.Worktree == nil {
+		t.Fatal("Worktree should not be nil")
+	}
+	if p.Worktree.OnEnd != "" {
+		t.Errorf("OnEnd should be empty, got %q", p.Worktree.OnEnd)
+	}
+}
+
+func TestParse_Dockerfile(t *testing.T) {
+	yaml := `
+profiles:
+  test:
+    environment: docker
+    launch: claude
+    dockerfile: docker/Dockerfile.custom
+`
+	cfg, err := Parse([]byte(yaml))
+	if err != nil {
+		t.Fatalf("Parse() error: %v", err)
+	}
+
+	p := cfg.Profiles["test"]
+	if p.Dockerfile != "docker/Dockerfile.custom" {
+		t.Errorf("Dockerfile = %q, want %q", p.Dockerfile, "docker/Dockerfile.custom")
+	}
 }
 
 func TestLoad_NoGitRepo(t *testing.T) {

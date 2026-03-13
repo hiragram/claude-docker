@@ -60,6 +60,13 @@ profiles:
     launch: zellij
     zellij:
       layout: default
+
+  worktree-with-setup:
+    worktree:
+      base: origin/main
+      on-create: "./scripts/setup.sh"
+    environment: docker
+    launch: claude
 ```
 
 ## Top-level fields
@@ -138,6 +145,32 @@ The git ref to base the worktree branch on. This can be a remote branch, local b
 ```yaml
 worktree:
   base: origin/develop
+```
+
+#### `worktree.on-create`
+
+| | |
+|---|---|
+| Type | `string` |
+| Default | _(none)_ |
+
+A shell command to run after the worktree is created. The command is executed via `sh -c` with the working directory set to the newly created worktree path.
+
+The following environment variables are available to the hook script:
+
+| Variable | Description |
+|---|---|
+| `AW_WORKTREE_PATH` | Absolute path to the created worktree |
+| `AW_WORKTREE_BRANCH` | Branch name of the created worktree |
+| `AW_REPO_ROOT` | Absolute path to the git repository root |
+| `AW_PROFILE_NAME` | Name of the profile being run |
+| `AW_ENVIRONMENT` | Profile environment (`host` or `docker`) |
+
+If the hook exits with a non-zero status, the pipeline is aborted.
+
+```yaml
+worktree:
+  on-create: "npm install && npm run setup"
 ```
 
 ### `zellij` (optional)

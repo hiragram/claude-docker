@@ -7,3 +7,8 @@ var dockerfile []byte
 
 //go:embed embed/entrypoint.sh
 var entrypointSh []byte
+
+// DefaultDockerfile returns the content of the embedded default Dockerfile.
+func DefaultDockerfile() []byte {
+	return dockerfile
+}

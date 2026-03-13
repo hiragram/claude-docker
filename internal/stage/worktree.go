@@ -62,8 +62,51 @@ func (s *WorktreeStage) Run(_ context.Context, ec *pipeline.ExecutionContext) er
 	ec.WorkDir = worktreePath
 	ec.WorktreePath = worktreePath
 	ec.WorktreeBranch = name
+	ec.RepoRoot = repoRoot
+
+	// Run on-create hook if configured
+	if ec.Profile.Worktree != nil && ec.Profile.Worktree.OnCreate != "" {
+		fmt.Fprintf(os.Stderr, "Running on-create hook...\n")
+		if err := runOnCreateHook(ec, repoRoot); err != nil {
+			return fmt.Errorf("on-create hook: %w", err)
+		}
+	}
 
 	return nil
+}
+
+// execCommand is a package-level var for testing.
+var execCommand = exec.Command
+
+func runOnCreateHook(ec *pipeline.ExecutionContext, repoRoot string) error {
+	cmd := execCommand("sh", "-c", ec.Profile.Worktree.OnCreate)
+	cmd.Dir = ec.WorktreePath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = append(os.Environ(),
+		"AW_WORKTREE_PATH="+ec.WorktreePath,
+		"AW_WORKTREE_BRANCH="+ec.WorktreeBranch,
+		"AW_REPO_ROOT="+repoRoot,
+		"AW_PROFILE_NAME="+ec.ProfileName,
+		"AW_ENVIRONMENT="+string(ec.Profile.Environment),
+	)
+	return cmd.Run()
+}
+
+// RunOnEndHook runs the on-end hook command after the launched process exits.
+func RunOnEndHook(ec *pipeline.ExecutionContext) error {
+	cmd := execCommand("sh", "-c", ec.Profile.Worktree.OnEnd)
+	cmd.Dir = ec.WorktreePath
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = append(os.Environ(),
+		"AW_WORKTREE_PATH="+ec.WorktreePath,
+		"AW_WORKTREE_BRANCH="+ec.WorktreeBranch,
+		"AW_REPO_ROOT="+ec.RepoRoot,
+		"AW_PROFILE_NAME="+ec.ProfileName,
+		"AW_ENVIRONMENT="+string(ec.Profile.Environment),
+	)
+	return cmd.Run()
 }
 
 func gitRepoRoot() (string, error) {

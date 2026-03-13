@@ -1,5 +1,71 @@
 # Changelog
 
+## [0.8.1](https://github.com/hiragram/agent-workspace/compare/v0.8.0...v0.8.1) (2026-03-04)
+
+
+### Bug Fixes
+
+* use already-built Docker image in zellij claude pane ([26f5f40](https://github.com/hiragram/agent-workspace/commit/26f5f40b69bec67385b75a0b3a2ec6b6e3e32c66))
+* use already-built Docker image in zellij claude pane ([513d63f](https://github.com/hiragram/agent-workspace/commit/513d63f5fdf5c652ddd259158a2c9d2d43aec4d5))
+
+## [0.8.0](https://github.com/hiragram/agent-workspace/compare/v0.7.1...v0.8.0) (2026-03-04)
+
+
+### Features
+
+* add default-dockerfile command and custom Dockerfile support ([4e3308c](https://github.com/hiragram/agent-workspace/commit/4e3308caa250e07ec7b3dadde8f81193edcceab8))
+* add default-dockerfile command and custom Dockerfile support ([227b61d](https://github.com/hiragram/agent-workspace/commit/227b61df6067a40ca72af24916d8f62c668f39a9))
+
+## [0.7.1](https://github.com/hiragram/agent-workspace/compare/v0.7.0...v0.7.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* pass profile env vars to child processes via .aw-profile-env ([9380e3d](https://github.com/hiragram/agent-workspace/commit/9380e3d9e3988d569fe74b28f43e8d5a27a33b1c))
+* pass profile env vars to child processes via .aw-profile-env ([a520685](https://github.com/hiragram/agent-workspace/commit/a52068584de02bb63a78054fd1ce20d9ad81f70a))
+
+## [0.7.0](https://github.com/hiragram/agent-workspace/compare/v0.6.0...v0.7.0) (2026-03-01)
+
+
+### Features
+
+* add custom environment variable passthrough to Docker containers ([b9e67b4](https://github.com/hiragram/agent-workspace/commit/b9e67b40f04b16af4e591cc4316e166dcd8817a9))
+
+
+### Bug Fixes
+
+* handle errcheck lint for file Close in envfile parser ([cf2863a](https://github.com/hiragram/agent-workspace/commit/cf2863a5549f3547c56d8787a6899704ab62f7b8))
+
+## [0.6.0](https://github.com/hiragram/agent-workspace/compare/v0.5.0...v0.6.0) (2026-03-01)
+
+
+### Features
+
+* add on-end lifecycle hook ([e59a776](https://github.com/hiragram/agent-workspace/commit/e59a7766b97ffb61bd3bfb0bb97c7b9e2bc5dbbb))
+* add on-end lifecycle hook for worktree profiles ([9e64201](https://github.com/hiragram/agent-workspace/commit/9e642016c548b307ccdcebb4382b7690a3e20c94))
+
+## [0.5.0](https://github.com/hiragram/agent-workspace/compare/v0.4.0...v0.5.0) (2026-03-01)
+
+
+### Features
+
+* add on-create hook for worktree profiles ([0092cc6](https://github.com/hiragram/agent-workspace/commit/0092cc6c871a169033554fc33c0495653a60325d))
+* add on-create hook for worktree profiles ([3d7293e](https://github.com/hiragram/agent-workspace/commit/3d7293ebf912d7a644b93ad474596adecb3b0007))
+* install Go 1.23.6 in Docker container ([ba59007](https://github.com/hiragram/agent-workspace/commit/ba590071391ce7a88fbec789b7404a2d06128d83))
+* install Go 1.23.6 in Docker container ([4d01510](https://github.com/hiragram/agent-workspace/commit/4d01510deba918fdc52c5b1f59eaad63b3e1fd4c))
+* merge builtin profiles with user config ([94b57d4](https://github.com/hiragram/agent-workspace/commit/94b57d44de1ead4cfe1c60f15d07ea704c871c19))
+* merge builtin profiles with user config ([c97dfc7](https://github.com/hiragram/agent-workspace/commit/c97dfc7f3edcffa5e4878973638251ad82d0384e))
+
+## [0.4.0](https://github.com/hiragram/agent-workspace/compare/v0.3.0...v0.4.0) (2026-03-01)
+
+
+### Features
+
+* add `aw profiles` subcommand ([1c4964d](https://github.com/hiragram/agent-workspace/commit/1c4964d1a66aaeaeb9f5a2152ea59530e2972640))
+* add `aw profiles` subcommand to list available profiles ([f7ac122](https://github.com/hiragram/agent-workspace/commit/f7ac122c28addbafabdd388720fb97a9ce7ed082))
+* rename docker-claude to claude and add worktree-zellij as default ([8c713cf](https://github.com/hiragram/agent-workspace/commit/8c713cf5a1dfc3c02673a195add47aaad2ff4d09))
+* rename docker-claude to claude and add worktree-zellij as default builtin ([c20b69a](https://github.com/hiragram/agent-workspace/commit/c20b69aadc7f915cd153e9a0c7422be472bda4e3))
+
 ## [0.3.0](https://github.com/hiragram/agent-workspace/compare/v0.2.0...v0.3.0) (2026-02-28)
 
 

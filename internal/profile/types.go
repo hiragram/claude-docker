@@ -15,15 +15,19 @@ type Config struct {
 
 // Profile describes a single named workspace profile.
 type Profile struct {
-	Worktree    *WorktreeConfig `yaml:"worktree,omitempty"`
-	Environment Environment     `yaml:"environment"`
-	Launch      LaunchMode      `yaml:"launch"`
-	Zellij      *ZellijConfig   `yaml:"zellij,omitempty"`
+	Worktree    *WorktreeConfig   `yaml:"worktree,omitempty"`
+	Environment Environment       `yaml:"environment"`
+	Launch      LaunchMode        `yaml:"launch"`
+	Zellij      *ZellijConfig     `yaml:"zellij,omitempty"`
+	Env         map[string]string `yaml:"env,omitempty"`    // custom env vars to pass into Docker container
+	Dockerfile  string            `yaml:"dockerfile,omitempty"` // custom Dockerfile path (docker environment only)
 }
 
 // WorktreeConfig controls git worktree creation.
 type WorktreeConfig struct {
-	Base string `yaml:"base,omitempty"` // default: "origin/main"
+	Base     string `yaml:"base,omitempty"`      // default: "origin/main"
+	OnCreate string `yaml:"on-create,omitempty"` // shell command to run after worktree creation
+	OnEnd    string `yaml:"on-end,omitempty"`    // shell command to run after launched process exits
 }
 
 // EffectiveBase returns the base ref, defaulting to "origin/main" if empty.

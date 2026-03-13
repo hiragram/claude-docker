@@ -58,12 +58,14 @@ func LoadFile(path string) (*Config, error) {
 		return nil, fmt.Errorf("reading config file: %w", err)
 	}
 
-	cfg, err := Parse(data)
+	userCfg, err := Parse(data)
 	if err != nil {
 		return nil, err
 	}
-	cfg.Source = ConfigSource{FilePath: path}
-	return cfg, nil
+
+	merged := MergeConfig(builtinConfig, *userCfg)
+	merged.Source = ConfigSource{FilePath: path}
+	return &merged, nil
 }
 
 // Parse parses YAML bytes into a Config.

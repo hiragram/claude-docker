@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hiragram/agent-workspace/internal/image"
 	"github.com/hiragram/agent-workspace/internal/pipeline"
 	"github.com/hiragram/agent-workspace/internal/profile"
 	"github.com/hiragram/agent-workspace/internal/stage"
@@ -30,6 +31,10 @@ func Run(args []string) int {
 
 	if len(args) > 0 && args[0] == "profiles" {
 		return runProfiles()
+	}
+
+	if len(args) > 0 && args[0] == "default-dockerfile" {
+		return runDefaultDockerfile()
 	}
 
 	// Determine profile name
@@ -95,16 +100,38 @@ func Run(args []string) int {
 		WorkDir:     workDir,
 	}
 
+	// Warn about on-end limitations
+	if p.Worktree != nil && p.Worktree.OnEnd != "" &&
+		p.Environment == profile.EnvironmentHost &&
+		p.Launch != profile.LaunchZellij {
+		fmt.Fprintf(os.Stderr, "Warning: on-end hook will not run with environment: host + launch: %s (process is replaced via exec)\n", p.Launch)
+	}
+
 	// Build pipeline stages
 	stages := buildStages(p)
 	pipe := pipeline.New(stages...)
 
 	if err := pipe.Execute(context.Background(), ec); err != nil {
+		runOnEndIfConfigured(ec)
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		return 1
 	}
 
+	runOnEndIfConfigured(ec)
 	return 0
+}
+
+func runOnEndIfConfigured(ec *pipeline.ExecutionContext) {
+	if ec.Profile.Worktree == nil || ec.Profile.Worktree.OnEnd == "" {
+		return
+	}
+	if ec.WorktreePath == "" {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "Running on-end hook...\n")
+	if err := stage.RunOnEndHook(ec); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: on-end hook failed: %v\n", err)
+	}
 }
 
 // buildStages creates the pipeline stages based on the profile configuration.
@@ -121,7 +148,12 @@ func buildStages(p profile.Profile) []pipeline.Stage {
 		stages = append(stages, stage.NewDockerStage())
 	}
 
-	// Stage 3: Launch (always)
+	// Stage 3: Env loading (conditional — only for Docker, where custom env vars are needed)
+	if p.Environment == profile.EnvironmentDocker {
+		stages = append(stages, &stage.EnvStage{})
+	}
+
+	// Stage 4: Launch (always)
 	stages = append(stages, &stage.LaunchStage{})
 
 	return stages
@@ -171,7 +203,19 @@ func describeProfile(p profile.Profile) string {
 	}
 	parts = append(parts, string(p.Environment))
 	parts = append(parts, string(p.Launch))
+	if p.Dockerfile != "" {
+		parts = append(parts, "dockerfile:"+p.Dockerfile)
+	}
 	return strings.Join(parts, " + ")
+}
+
+func runDefaultDockerfile() int {
+	_, err := os.Stdout.Write(image.DefaultDockerfile())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error writing Dockerfile: %v\n", err)
+		return 1
+	}
+	return 0
 }
 
 // hasVersionFlag checks if the args contain --version or -v.

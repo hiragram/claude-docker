@@ -7,8 +7,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"text/template"
 
+	"github.com/hiragram/agent-workspace/internal/docker"
 	"github.com/hiragram/agent-workspace/internal/pipeline"
 	"github.com/hiragram/agent-workspace/internal/profile"
 )
@@ -102,17 +104,42 @@ func (l *ZellijLauncher) prepareFiles(ec *pipeline.ExecutionContext) (string, fu
 func (l *ZellijLauncher) buildClaudeCommand(ec *pipeline.ExecutionContext) string {
 	switch ec.Profile.Environment {
 	case profile.EnvironmentDocker:
-		// Run aw with the claude profile equivalent
-		// This will cause it to build docker image and run claude inside
-		self, err := os.Executable()
-		if err != nil {
-			self = "aw"
+		// Build docker run command directly using the image already built
+		// by the DockerStage, so we don't re-run the pipeline with a
+		// different profile that would lose custom Dockerfile settings.
+		envVars := make(map[string]string, len(ec.EnvVars)+2)
+		for k, v := range ec.EnvVars {
+			envVars[k] = v
 		}
-		return fmt.Sprintf("%s claude", self)
+		envVars["HOST_CLAUDE_HOME"] = claudeHomePath(ec.HomeDir)
+		envVars["HOST_WORKSPACE"] = ec.WorkDir
+
+		runConfig := docker.RunConfig{
+			ImageName: ec.DockerImage,
+			Mounts:    ec.DockerMounts,
+			EnvVars:   envVars,
+			WorkDir:   ec.WorkDir,
+			Command:   []string{"claude", "--dangerously-skip-permissions"},
+		}
+		args := docker.BuildRunArgs(runConfig)
+		return "docker " + shellJoin(args)
 	default:
 		// Host mode: just run claude directly
 		return "claude"
 	}
+}
+
+// shellJoin quotes arguments for safe shell embedding.
+func shellJoin(args []string) string {
+	quoted := make([]string, len(args))
+	for i, a := range args {
+		if strings.ContainsAny(a, " \t\n\"'\\$`!#&|;(){}") {
+			quoted[i] = "'" + strings.ReplaceAll(a, "'", "'\"'\"'") + "'"
+		} else {
+			quoted[i] = a
+		}
+	}
+	return strings.Join(quoted, " ")
 }
 
 func (l *ZellijLauncher) launchZellij(workDir, tmpDir, sessionName string) error {

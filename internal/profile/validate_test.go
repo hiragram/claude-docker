@@ -74,6 +74,23 @@ func TestValidate(t *testing.T) {
 			},
 			wantErr: "zellij config is only valid with launch: zellij",
 		},
+		{
+			name: "valid docker with custom dockerfile",
+			profile: Profile{
+				Environment: EnvironmentDocker,
+				Launch:      LaunchClaude,
+				Dockerfile:  "docker/Dockerfile.custom",
+			},
+		},
+		{
+			name: "dockerfile with non-docker environment",
+			profile: Profile{
+				Environment: EnvironmentHost,
+				Launch:      LaunchShell,
+				Dockerfile:  "docker/Dockerfile.custom",
+			},
+			wantErr: "dockerfile is only valid with environment: docker",
+		},
 	}
 
 	for _, tt := range tests {
