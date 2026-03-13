@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.0](https://github.com/hiragram/agent-workspace/compare/v0.8.1...v0.9.0) (2026-03-13)
+
+
+### Features
+
+* enable sudo for claude user in Docker container ([e0fb33d](https://github.com/hiragram/agent-workspace/commit/e0fb33d406def5606fe252102663800827afb440))
+* update builtin profiles and enable sudo for claude user ([9a68530](https://github.com/hiragram/agent-workspace/commit/9a68530793827b4b92703922651572652c4b050c))
+
 ## [0.8.1](https://github.com/hiragram/agent-workspace/compare/v0.8.0...v0.8.1) (2026-03-04)
 
 
