@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.0](https://github.com/hiragram/agent-workspace/compare/v0.10.0...v0.11.0) (2026-03-22)
+
+
+### Features
+
+* drop to container shell instead of host when claude exits ([9df8916](https://github.com/hiragram/agent-workspace/commit/9df89168a75c9dde5a326c1f3e59df572c7af020))
+* drop to container shell when claude exits in zellij ([1648fb4](https://github.com/hiragram/agent-workspace/commit/1648fb431f992e099de10a81751fc32f08e224e9))
+
 ## [0.10.0](https://github.com/hiragram/agent-workspace/compare/v0.9.0...v0.10.0) (2026-03-22)
 
 
