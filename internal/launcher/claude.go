@@ -44,7 +44,7 @@ func (l *ClaudeLauncher) launchHostClaude(ec *pipeline.ExecutionContext) error {
 func (l *ClaudeLauncher) launchDockerClaude(ctx context.Context, ec *pipeline.ExecutionContext) error {
 	client := docker.NewShellClient()
 
-	command := []string{"claude", "--dangerously-skip-permissions"}
+	command := []string{"bash", "-c", "claude --dangerously-skip-permissions; exec bash"}
 
 	envVars := make(map[string]string, len(ec.EnvVars)+2)
 	for k, v := range ec.EnvVars {
