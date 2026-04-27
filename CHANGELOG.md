@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.0](https://github.com/hiragram/agent-workspace/compare/v0.11.0...v0.12.0) (2026-04-27)
+
+
+### Features
+
+* pass worktree base ref to git-diff-picker via AW_BASE_REF ([51b09c3](https://github.com/hiragram/agent-workspace/commit/51b09c32c90cebe1927fd2bf9a8b3daadae287b8))
+* pass worktree base ref to git-diff-picker via AW_BASE_REF ([2f30fac](https://github.com/hiragram/agent-workspace/commit/2f30fac608203b0dae9b49eb19fa49e7cd9d54f0))
+
 ## [0.11.0](https://github.com/hiragram/agent-workspace/compare/v0.10.0...v0.11.0) (2026-03-22)
 
 
