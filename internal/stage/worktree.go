@@ -62,6 +62,7 @@ func (s *WorktreeStage) Run(_ context.Context, ec *pipeline.ExecutionContext) er
 	ec.WorkDir = worktreePath
 	ec.WorktreePath = worktreePath
 	ec.WorktreeBranch = name
+	ec.WorktreeBase = base
 	ec.RepoRoot = repoRoot
 
 	// Run on-create hook if configured

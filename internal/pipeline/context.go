@@ -17,6 +17,7 @@ type ExecutionContext struct {
 	WorkDir        string // effective working directory (may be worktree path)
 	WorktreePath   string // empty if no worktree was created
 	WorktreeBranch string // branch name of the created worktree
+	WorktreeBase   string // base ref the worktree was created from (e.g. "origin/main")
 	RepoRoot       string // git repository root path
 
 	// Set by DockerStage (if applicable)
