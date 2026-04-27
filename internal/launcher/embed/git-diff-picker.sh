@@ -2,6 +2,11 @@
 cd "$(git rev-parse --show-toplevel 2>/dev/null)" || exit 1
 REPO_ROOT=$(pwd)
 
+# Base ref to diff against. Supplied by the parent process (aw) which
+# resolves it from .agent-workspace.yml (worktree.base) or, if unset,
+# from the repository's default branch.
+BASE_REF="${AW_BASE_REF:-origin/main}"
+
 find_free_port() {
   local min=38000
   local max=41000
@@ -44,7 +49,7 @@ format_files() {
 
 make_reload_cmd() {
   cat << RELOAD_EOF
-reload(git -C '$REPO_ROOT' diff --name-only origin/main | while IFS= read -r f; do printf '%s\n\033[90m%s\033[0m\0' "\$(basename "\$f")" "\$(dirname "\$f")"; done)
+reload(git -C '$REPO_ROOT' diff --name-only '$BASE_REF' | while IFS= read -r f; do printf '%s\n\033[90m%s\033[0m\0' "\$(basename "\$f")" "\$(dirname "\$f")"; done)
 RELOAD_EOF
 }
 
@@ -53,7 +58,7 @@ while true; do
     sleep 1
     prev=""
     while true; do
-      current=$(git -C "$REPO_ROOT" diff --name-only origin/main 2>/dev/null | sort)
+      current=$(git -C "$REPO_ROOT" diff --name-only "$BASE_REF" 2>/dev/null | sort)
       if [ "$current" != "$prev" ]; then
         curl -s -X POST "localhost:$FZF_PORT" -d "$(make_reload_cmd)" >/dev/null 2>&1 || break
         prev="$current"
@@ -63,7 +68,7 @@ while true; do
   ) &
   reload_pid=$!
 
-  selected=$(git -C "$REPO_ROOT" diff --name-only origin/main 2>/dev/null | format_files | fzf \
+  selected=$(git -C "$REPO_ROOT" diff --name-only "$BASE_REF" 2>/dev/null | format_files | fzf \
     --listen $FZF_PORT \
     --reverse \
     --ansi \
@@ -86,5 +91,5 @@ while true; do
     file="$dirpath/$filename"
   fi
 
-  zellij run --floating --width=80% --height=80% --name="diff: $file" --close-on-exit -- bash -c "git -C '$REPO_ROOT' diff -U5 origin/main -- '$file' | delta --side-by-side --line-numbers --minus-style=\"syntax #1a0a0a\" --minus-emph-style=\"syntax #5a2a2a\" --plus-style=\"syntax #0a1a0a\" --plus-emph-style=\"syntax #2a5a2a\" --line-numbers-minus-style=\"#ff6666\" --line-numbers-plus-style=\"#66ff66\" --paging=always --pager=\"less -Rc\""
+  zellij run --floating --width=80% --height=80% --name="diff: $file" --close-on-exit -- bash -c "git -C '$REPO_ROOT' diff -U5 '$BASE_REF' -- '$file' | delta --side-by-side --line-numbers --minus-style=\"syntax #1a0a0a\" --minus-emph-style=\"syntax #5a2a2a\" --plus-style=\"syntax #0a1a0a\" --plus-emph-style=\"syntax #2a5a2a\" --line-numbers-minus-style=\"#ff6666\" --line-numbers-plus-style=\"#66ff66\" --paging=always --pager=\"less -Rc\""
 done

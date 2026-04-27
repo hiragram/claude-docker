@@ -43,7 +43,7 @@ func (l *ZellijLauncher) Launch(_ context.Context, ec *pipeline.ExecutionContext
 	}
 
 	fmt.Fprintf(os.Stderr, "Launching zellij session: %s\n", sessionName)
-	return l.launchZellij(ec.WorkDir, tmpDir, sessionName)
+	return l.launchZellij(ec.WorkDir, tmpDir, sessionName, ec.WorktreeBase)
 }
 
 func (l *ZellijLauncher) prepareFiles(ec *pipeline.ExecutionContext) (string, func(), error) {
@@ -142,7 +142,7 @@ func shellJoin(args []string) string {
 	return strings.Join(quoted, " ")
 }
 
-func (l *ZellijLauncher) launchZellij(workDir, tmpDir, sessionName string) error {
+func (l *ZellijLauncher) launchZellij(workDir, tmpDir, sessionName, baseRef string) error {
 	layoutPath := filepath.Join(tmpDir, "layout.kdl")
 	cmd := exec.Command("zellij",
 		"--new-session-with-layout", layoutPath,
@@ -151,5 +151,9 @@ func (l *ZellijLauncher) launchZellij(workDir, tmpDir, sessionName string) error
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+	if baseRef != "" {
+		cmd.Env = append(cmd.Env, "AW_BASE_REF="+baseRef)
+	}
 	return cmd.Run()
 }
