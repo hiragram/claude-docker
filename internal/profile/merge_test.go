@@ -428,11 +428,11 @@ func TestMergeConfig_TopLevelMerged(t *testing.T) {
 
 	merged := MergeConfig(builtin, user)
 
-	if merged.Profile.Environment != EnvironmentDocker {
-		t.Errorf("top-level Environment = %q, want %q (from builtin)", merged.Profile.Environment, EnvironmentDocker)
+	if merged.Environment != EnvironmentDocker {
+		t.Errorf("top-level Environment = %q, want %q (from builtin)", merged.Environment, EnvironmentDocker)
 	}
-	if merged.Profile.Worktree == nil || merged.Profile.Worktree.Dir != "/custom" {
-		t.Errorf("top-level Worktree.Dir should be %q, got %+v", "/custom", merged.Profile.Worktree)
+	if merged.Worktree == nil || merged.Worktree.Dir != "/custom" {
+		t.Errorf("top-level Worktree.Dir should be %q, got %+v", "/custom", merged.Worktree)
 	}
 }
 
