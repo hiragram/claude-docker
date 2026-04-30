@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.13.0](https://github.com/hiragram/agent-workspace/compare/v0.12.0...v0.13.0) (2026-04-30)
+
+
+### Features
+
+* support top-level profile defaults and worktree.dir ([f8f8c53](https://github.com/hiragram/agent-workspace/commit/f8f8c53393ecb5770e1903e87c0f32c9ce4cbc0b))
+* top-level profile defaults and configurable worktree.dir ([54db0c6](https://github.com/hiragram/agent-workspace/commit/54db0c689e3f70cb97e2aa3f5ba15486c43f8906))
+
+
+### Bug Fixes
+
+* **profile:** drop redundant embedded Profile selector in tests ([c7ef590](https://github.com/hiragram/agent-workspace/commit/c7ef590c925febe5aa50f3e2a46c855f3b2c752e))
+
 ## [0.12.0](https://github.com/hiragram/agent-workspace/compare/v0.11.0...v0.12.0) (2026-04-27)
 
 
