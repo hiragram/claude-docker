@@ -45,15 +45,18 @@ func (s *WorktreeStage) Run(_ context.Context, ec *pipeline.ExecutionContext) er
 		}
 	}
 
-	// Create worktrees directory
-	worktreesDir := filepath.Join(repoRoot, "worktrees")
+	// Determine worktrees directory (config-overridable)
+	worktreesDir, err := resolveWorktreesDir(ec, repoRoot)
+	if err != nil {
+		return fmt.Errorf("resolving worktrees directory: %w", err)
+	}
 	if err := os.MkdirAll(worktreesDir, 0755); err != nil {
 		return fmt.Errorf("creating worktrees directory: %w", err)
 	}
 
 	// Create worktree
 	worktreePath := filepath.Join(worktreesDir, name)
-	fmt.Fprintf(os.Stderr, "Creating worktree: worktrees/%s\n", name)
+	fmt.Fprintf(os.Stderr, "Creating worktree: %s\n", worktreePath)
 	if err := gitWorktreeAdd(repoRoot, name, worktreePath, base); err != nil {
 		return fmt.Errorf("creating worktree: %w", err)
 	}
@@ -108,6 +111,32 @@ func RunOnEndHook(ec *pipeline.ExecutionContext) error {
 		"AW_ENVIRONMENT="+string(ec.Profile.Environment),
 	)
 	return cmd.Run()
+}
+
+// resolveWorktreesDir returns the absolute path of the directory under which
+// worktrees are created. If profile.Worktree.Dir is set, it is used (with ~
+// expansion; relative paths are resolved against repoRoot). Otherwise it
+// defaults to <repoRoot>/worktrees.
+func resolveWorktreesDir(ec *pipeline.ExecutionContext, repoRoot string) (string, error) {
+	dir := ""
+	if ec.Profile.Worktree != nil {
+		dir = ec.Profile.Worktree.Dir
+	}
+	if dir == "" {
+		return filepath.Join(repoRoot, "worktrees"), nil
+	}
+
+	if strings.HasPrefix(dir, "~") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("expanding ~ in worktree dir: %w", err)
+		}
+		dir = filepath.Join(home, strings.TrimPrefix(dir, "~"))
+	}
+	if !filepath.IsAbs(dir) {
+		dir = filepath.Join(repoRoot, dir)
+	}
+	return filepath.Clean(dir), nil
 }
 
 func gitRepoRoot() (string, error) {

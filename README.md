@@ -81,10 +81,36 @@ If no `.agent-workspace.yml` is found, `aw` uses a built-in default that creates
 
 ### Profile options
 
-- **`worktree`** (optional): Creates a git worktree. `base` defaults to `origin/main`.
+- **`worktree`** (optional): Creates a git worktree.
+  - `base` — base ref for the new worktree. Defaults to `origin/main`.
+  - `dir` — directory under which worktrees are created. Defaults to `<repoRoot>/worktrees`. Supports `~` expansion; relative paths are resolved against the repo root.
+  - `on-create` / `on-end` — shell hooks run after the worktree is created / after the launched process exits.
 - **`environment`** (required): `"host"` or `"docker"` — where the main process runs.
 - **`launch`** (required): `"shell"`, `"claude"`, or `"zellij"` — what to launch.
 - **`zellij`** (optional): Zellij session config. Only valid with `launch: zellij`.
+
+### Top-level defaults
+
+Any profile field can also be declared at the top level of the config. Top-level values act as defaults for every profile, and each profile overrides them field-by-field (sub-structs like `worktree` and `zellij` are merged, not replaced):
+
+```yaml
+default: worktree-zellij
+
+# Shared by every profile below
+worktree:
+  base: origin/main
+  dir: ~/.aw/worktrees
+environment: host
+
+profiles:
+  shell:
+    launch: shell                # inherits worktree + environment from top level
+  docker-claude:
+    environment: docker          # overrides only environment
+    launch: claude
+    worktree:
+      dir: /tmp/aw-worktrees     # overrides only worktree.dir; base is inherited
+```
 
 ## What it does (Docker mode)
 

@@ -7,8 +7,13 @@ type ConfigSource struct {
 }
 
 // Config represents the top-level .agent-workspace.yml file.
+//
+// Profile fields declared at the top level (via the embedded Profile) act as
+// defaults for every profile in Profiles. Each profile overrides those
+// defaults field-by-field using the same merge rules as MergeProfile.
 type Config struct {
 	Default  string             `yaml:"default"`
+	Profile  `yaml:",inline"`   // top-level defaults shared by all profiles
 	Profiles map[string]Profile `yaml:"profiles"`
 	Source   ConfigSource       `yaml:"-"`
 }
@@ -26,6 +31,7 @@ type Profile struct {
 // WorktreeConfig controls git worktree creation.
 type WorktreeConfig struct {
 	Base     string `yaml:"base,omitempty"`      // default: "origin/main"
+	Dir      string `yaml:"dir,omitempty"`       // directory to host worktrees in; default: <repoRoot>/worktrees. Supports ~ expansion and paths relative to repoRoot.
 	OnCreate string `yaml:"on-create,omitempty"` // shell command to run after worktree creation
 	OnEnd    string `yaml:"on-end,omitempty"`    // shell command to run after launched process exits
 }
