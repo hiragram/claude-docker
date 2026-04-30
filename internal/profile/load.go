@@ -65,7 +65,8 @@ func LoadFile(path string) (*Config, error) {
 
 	merged := MergeConfig(builtinConfig, *userCfg)
 	merged.Source = ConfigSource{FilePath: path}
-	return &merged, nil
+	applied := ApplyTopLevel(merged)
+	return &applied, nil
 }
 
 // Parse parses YAML bytes into a Config.

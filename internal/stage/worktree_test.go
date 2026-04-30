@@ -1,6 +1,7 @@
 package stage
 
 import (
+	"os"
 	"os/exec"
 	"testing"
 
@@ -274,5 +275,65 @@ func TestRunOnEndHook_FailureReturnsError(t *testing.T) {
 	err := RunOnEndHook(ec)
 	if err == nil {
 		t.Fatal("expected error from failing hook, got nil")
+	}
+}
+
+func TestResolveWorktreesDir_Default(t *testing.T) {
+	ec := &pipeline.ExecutionContext{
+		Profile: profile.Profile{},
+	}
+	got, err := resolveWorktreesDir(ec, "/repo")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "/repo/worktrees" {
+		t.Errorf("got %q, want %q", got, "/repo/worktrees")
+	}
+}
+
+func TestResolveWorktreesDir_AbsoluteOverride(t *testing.T) {
+	ec := &pipeline.ExecutionContext{
+		Profile: profile.Profile{
+			Worktree: &profile.WorktreeConfig{Dir: "/abs/wt"},
+		},
+	}
+	got, err := resolveWorktreesDir(ec, "/repo")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "/abs/wt" {
+		t.Errorf("got %q, want %q", got, "/abs/wt")
+	}
+}
+
+func TestResolveWorktreesDir_RelativeIsRepoRelative(t *testing.T) {
+	ec := &pipeline.ExecutionContext{
+		Profile: profile.Profile{
+			Worktree: &profile.WorktreeConfig{Dir: "../shared-worktrees"},
+		},
+	}
+	got, err := resolveWorktreesDir(ec, "/repo/sub")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "/repo/shared-worktrees" {
+		t.Errorf("got %q, want %q", got, "/repo/shared-worktrees")
+	}
+}
+
+func TestResolveWorktreesDir_TildeExpansion(t *testing.T) {
+	ec := &pipeline.ExecutionContext{
+		Profile: profile.Profile{
+			Worktree: &profile.WorktreeConfig{Dir: "~/aw-wt"},
+		},
+	}
+	got, err := resolveWorktreesDir(ec, "/repo")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	home, _ := os.UserHomeDir()
+	want := home + "/aw-wt"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }

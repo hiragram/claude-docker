@@ -362,6 +362,98 @@ func TestMergeProfile_EmptyDockerfileOverridePreservesBase(t *testing.T) {
 	}
 }
 
+func TestApplyTopLevel_PropagatesToProfiles(t *testing.T) {
+	cfg := Config{
+		Profile: Profile{
+			Environment: EnvironmentHost,
+			Worktree:    &WorktreeConfig{Base: "origin/main", Dir: "~/.aw/wt"},
+			Env:         map[string]string{"A": "1"},
+		},
+		Profiles: map[string]Profile{
+			"shell": {
+				Launch: LaunchShell,
+			},
+			"docker-override": {
+				Environment: EnvironmentDocker,
+				Worktree:    &WorktreeConfig{Dir: "/tmp/wt"},
+				Env:         map[string]string{"B": "2"},
+			},
+		},
+	}
+
+	out := ApplyTopLevel(cfg)
+
+	shell := out.Profiles["shell"]
+	if shell.Environment != EnvironmentHost {
+		t.Errorf("shell.Environment = %q, want %q (from top-level)", shell.Environment, EnvironmentHost)
+	}
+	if shell.Launch != LaunchShell {
+		t.Errorf("shell.Launch = %q, want %q", shell.Launch, LaunchShell)
+	}
+	if shell.Worktree == nil || shell.Worktree.Base != "origin/main" || shell.Worktree.Dir != "~/.aw/wt" {
+		t.Errorf("shell.Worktree = %+v, want top-level values propagated", shell.Worktree)
+	}
+	if shell.Env["A"] != "1" {
+		t.Errorf("shell.Env[A] = %q, want %q", shell.Env["A"], "1")
+	}
+
+	d := out.Profiles["docker-override"]
+	if d.Environment != EnvironmentDocker {
+		t.Errorf("docker-override.Environment = %q, want %q (override)", d.Environment, EnvironmentDocker)
+	}
+	if d.Worktree == nil || d.Worktree.Base != "origin/main" {
+		t.Errorf("docker-override.Worktree.Base should inherit from top-level, got %+v", d.Worktree)
+	}
+	if d.Worktree.Dir != "/tmp/wt" {
+		t.Errorf("docker-override.Worktree.Dir = %q, want %q (override)", d.Worktree.Dir, "/tmp/wt")
+	}
+	if d.Env["A"] != "1" || d.Env["B"] != "2" {
+		t.Errorf("docker-override.Env = %+v, want both A and B", d.Env)
+	}
+}
+
+func TestMergeConfig_TopLevelMerged(t *testing.T) {
+	builtin := Config{
+		Profile: Profile{
+			Environment: EnvironmentDocker,
+		},
+		Profiles: map[string]Profile{},
+	}
+	user := Config{
+		Profile: Profile{
+			Worktree: &WorktreeConfig{Dir: "/custom"},
+		},
+		Profiles: map[string]Profile{},
+	}
+
+	merged := MergeConfig(builtin, user)
+
+	if merged.Environment != EnvironmentDocker {
+		t.Errorf("top-level Environment = %q, want %q (from builtin)", merged.Environment, EnvironmentDocker)
+	}
+	if merged.Worktree == nil || merged.Worktree.Dir != "/custom" {
+		t.Errorf("top-level Worktree.Dir should be %q, got %+v", "/custom", merged.Worktree)
+	}
+}
+
+func TestMergeProfile_WorktreeDeepMerge(t *testing.T) {
+	base := Profile{
+		Worktree: &WorktreeConfig{Base: "origin/main", Dir: "/base/wt"},
+	}
+	override := Profile{
+		Worktree: &WorktreeConfig{Dir: "/override/wt"},
+	}
+
+	merged := MergeProfile(base, override)
+
+	if merged.Worktree.Base != "origin/main" {
+		t.Errorf("Base = %q, want %q (preserved from base)", merged.Worktree.Base, "origin/main")
+	}
+	if merged.Worktree.Dir != "/override/wt" {
+		t.Errorf("Dir = %q, want %q (override)", merged.Worktree.Dir, "/override/wt")
+	}
+}
+
 func TestMergeConfig_WorktreeEmptyObjectEnablesWorktree(t *testing.T) {
 	builtin := Config{
 		Profiles: map[string]Profile{
